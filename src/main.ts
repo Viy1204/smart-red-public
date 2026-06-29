@@ -60,7 +60,7 @@ export default class SmartRedPlugin extends Plugin {
   }
 
   async loadSettings() {
-    this.settings = normalizeSettings(await this.loadData());
+    this.settings = normalizeSettings((await this.loadData()) ?? {});
   }
 
   async saveSettings() {
