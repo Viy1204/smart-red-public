@@ -664,17 +664,17 @@ export class RedView extends ItemView {
   }
 
   private async loadImageDimensions(src: string): Promise<{ width: number; height: number } | null> {
-    const ImageCtor = (globalThis as typeof globalThis & { Image?: typeof Image }).Image;
+    const ImageCtor = (window as typeof window & { Image?: typeof Image }).Image;
     if (!ImageCtor) return null;
 
     return new Promise((resolve) => {
       const img = new ImageCtor();
-      const timer = globalThis.setTimeout(() => {
+      const timer = window.setTimeout(() => {
         cleanup();
         resolve(null);
       }, IMAGE_LOAD_TIMEOUT_MS);
       const cleanup = () => {
-        globalThis.clearTimeout(timer);
+        window.clearTimeout(timer);
         img.onload = null;
         img.onerror = null;
       };

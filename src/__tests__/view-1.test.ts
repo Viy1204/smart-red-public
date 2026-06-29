@@ -16,11 +16,11 @@ function makeAppWithFile(content: string) {
 describe('RedView', () => {
   let view: RedView;
   let app: App;
-  const originalImage = (globalThis as any).Image;
+  const originalImage = (window as any).Image;
   const originalFonts = (document as any).fonts;
 
   beforeEach(() => {
-    (globalThis as any).Image = originalImage;
+    (window as any).Image = originalImage;
     (document as any).fonts = originalFonts;
     app = makeAppWithFile('# Hello\n\nThis is a test note with some content.');
     const leaf = new WorkspaceLeaf(app);
@@ -165,7 +165,7 @@ describe('RedView', () => {
         setTimeout(() => this.onerror?.(), 0);
       }
     }
-    (globalThis as any).Image = BrokenImage;
+    (window as any).Image = BrokenImage;
 
     const blocks = await (view as any).prepareBlocksForRender(
       [
@@ -194,7 +194,7 @@ describe('RedView', () => {
         setTimeout(() => this.onload?.(), 0);
       }
     }
-    (globalThis as any).Image = LoadedImage;
+    (window as any).Image = LoadedImage;
     app.vault.getAbstractFileByPath = (path: string) => path === 'folder/image.png' ? { path } : null;
     app.vault.getResourcePath = (file: any) => `app://resource/${file.path}`;
 

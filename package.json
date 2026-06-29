@@ -1,6 +1,6 @@
 {
   "name": "smart-red",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Convert Obsidian notes to Xiaohongshu (RED) style images",
   "main": "main.js",
   "scripts": {
