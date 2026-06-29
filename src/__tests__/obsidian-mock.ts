@@ -161,6 +161,11 @@ export class Setting {
   }
 }
 
+export function sanitizeHTMLToDom(html: string): DocumentFragment {
+  const range = document.createRange();
+  return range.createContextualFragment(html);
+}
+
 export class App {
   vault: any;
   workspace: any;

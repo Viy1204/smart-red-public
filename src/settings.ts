@@ -53,7 +53,6 @@ export class SmartRedSettingTab extends PluginSettingTab {
   display(): void {
     const { containerEl } = this;
     containerEl.empty();
-    new Setting(containerEl).setName('Smart RED Settings').setHeading();
     new Setting(containerEl).setName('Template and Typography').setHeading();
 
     new Setting(containerEl)

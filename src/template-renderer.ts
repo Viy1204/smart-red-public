@@ -30,13 +30,6 @@ function getStylesheet(template: Template): CSSStyleSheet {
   return sheet;
 }
 
-function createStylesheetLink(template: Template): HTMLLinkElement {
-  const link = document.createElement("link");
-  link.rel = "stylesheet";
-  link.href = `data:text/css;base64,${btoa(unescape(encodeURIComponent(template.styles)))}`;
-  return link;
-}
-
 export class TemplateRenderer {
   private createCardElement(
     blocks: SemanticBlock[],
@@ -147,7 +140,6 @@ export class TemplateRenderer {
       boxSizing: "border-box",
     });
 
-    container.appendChild(createStylesheetLink(template));
     const cardEl = this.createCardElement(blocks, page, template, context);
     container.appendChild(cardEl);
     return cardEl;

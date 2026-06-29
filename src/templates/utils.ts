@@ -1,3 +1,4 @@
+import { sanitizeHTMLToDom } from "obsidian";
 import { BlockType, type SemanticBlock } from "../types";
 import type { PaginationDecision } from "../pagination-engine";
 import type { TemplateRenderContext } from "./types";
@@ -252,5 +253,5 @@ export function layoutArticleCard(
 ): void {
   const html = `${renderChrome(page, chrome, context)}<main class="article-flow">${renderBlocks(blocks)}</main>`;
   el.empty();
-  el.appendChild(document.createRange().createContextualFragment(html));
+  el.appendChild(sanitizeHTMLToDom(html));
 }
