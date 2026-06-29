@@ -1,6 +1,6 @@
 import { toBlob } from "html-to-image";
 import html2canvas from "html2canvas";
-import JSZip from "jszip";
+import { zip } from "fflate";
 
 /**
  * Filter out CSS custom properties (--*) to avoid Chrome 138+ 5-10x slowdown.
@@ -125,14 +125,23 @@ export class ExportPipeline {
 	 * Each page is named: 小红书笔记_第N页.png
 	 */
 	async exportAllPages(containers: HTMLElement[]): Promise<Blob> {
-		const zip = new JSZip();
+		const files: Record<string, Uint8Array> = {};
 
 		for (let i = 0; i < containers.length; i++) {
 			const blob = await this.renderToBlob(containers[i], i);
-			zip.file(pageFileName(i), blob);
+			const array = new Uint8Array(await blob.arrayBuffer());
+			files[pageFileName(i)] = array;
 		}
 
-		return zip.generateAsync({ type: "blob" });
+		return new Promise((resolve, reject) => {
+			zip(files, (err, data) => {
+				if (err) {
+					reject(err);
+				} else {
+					resolve(new Blob([data], { type: "application/zip" }));
+				}
+			});
+		});
 	}
 
 	/**
@@ -213,7 +222,7 @@ export class ExportPipeline {
 	}
 
 	private async isLikelyBlankBlob(blob: Blob): Promise<boolean> {
-		const createBitmap = (globalThis as typeof globalThis & {
+		const createBitmap = (window as typeof window & {
 			createImageBitmap?: (blob: Blob) => Promise<ImageBitmap>;
 		}).createImageBitmap;
 		if (!createBitmap || typeof document === "undefined") return false;

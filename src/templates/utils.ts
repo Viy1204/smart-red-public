@@ -250,8 +250,7 @@ export function layoutArticleCard(
   chrome: TemplateChrome,
   context?: TemplateRenderContext
 ): void {
-  el.innerHTML = `
-    ${renderChrome(page, chrome, context)}
-    <main class="article-flow">${renderBlocks(blocks)}</main>
-  `;
+  const html = `${renderChrome(page, chrome, context)}<main class="article-flow">${renderBlocks(blocks)}</main>`;
+  el.empty();
+  el.appendChild(document.createRange().createContextualFragment(html));
 }

@@ -42,15 +42,15 @@ export default class SmartRedPlugin extends Plugin {
     );
 
     this.addCommand({
-      id: 'open-smart-red-view',
-      name: 'Open Smart RED Preview',
+      id: 'open-preview',
+      name: 'Open preview',
       callback: async () => {
         await this.activateView();
       },
     });
 
-    this.addRibbonIcon('image', 'Open Smart RED Preview', () => {
-      this.activateView();
+    this.addRibbonIcon('image', 'Open preview', async () => {
+      await this.activateView();
     });
 
     this.addSettingTab(new SmartRedSettingTab(this.app, this));

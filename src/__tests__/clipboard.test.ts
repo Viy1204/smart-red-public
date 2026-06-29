@@ -4,10 +4,10 @@ import { copyPngBlobToClipboard } from "../clipboard";
 
 describe("copyPngBlobToClipboard", () => {
   const originalNavigator = globalThis.navigator;
-  const originalClipboardItem = (globalThis as any).ClipboardItem;
+  const originalClipboardItem = (window as any).ClipboardItem;
 
   beforeEach(() => {
-    (globalThis as any).ClipboardItem = class {
+    (window as any).ClipboardItem = class {
       data: Record<string, Blob>;
       constructor(data: Record<string, Blob>) {
         this.data = data;
@@ -20,7 +20,7 @@ describe("copyPngBlobToClipboard", () => {
       value: originalNavigator,
       configurable: true,
     });
-    (globalThis as any).ClipboardItem = originalClipboardItem;
+    (window as any).ClipboardItem = originalClipboardItem;
   });
 
   test("writes PNG blob to clipboard", async () => {

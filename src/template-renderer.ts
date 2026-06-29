@@ -17,13 +17,27 @@ export function headerReservePx(showHeader: boolean, hasAvatar: boolean): number
   return hasAvatar ? HEADER_RESERVE_AVATAR_PX : HEADER_RESERVE_BASE_PX;
 }
 
-export class TemplateRenderer {
-  private createStyleElement(template: Template): HTMLStyleElement {
-    const styleEl = document.createElement("style");
-    styleEl.textContent = template.styles;
-    return styleEl;
-  }
+// Cache constructable stylesheets per template so we don't rebuild them.
+const stylesheetCache = new Map<string, CSSStyleSheet>();
 
+function getStylesheet(template: Template): CSSStyleSheet {
+  let sheet = stylesheetCache.get(template.name);
+  if (!sheet) {
+    sheet = new CSSStyleSheet();
+    sheet.replaceSync(template.styles);
+    stylesheetCache.set(template.name, sheet);
+  }
+  return sheet;
+}
+
+function createStylesheetLink(template: Template): HTMLLinkElement {
+  const link = document.createElement("link");
+  link.rel = "stylesheet";
+  link.href = `data:text/css;base64,${btoa(unescape(encodeURIComponent(template.styles)))}`;
+  return link;
+}
+
+export class TemplateRenderer {
   private createCardElement(
     blocks: SemanticBlock[],
     page: PaginationDecision,
@@ -32,11 +46,13 @@ export class TemplateRenderer {
   ): HTMLElement {
     const cardEl = document.createElement("div");
     cardEl.className = template.cardClassName;
-    cardEl.style.width = `${CARD_WIDTH}px`;
-    cardEl.style.height = `${CARD_HEIGHT}px`;
-    cardEl.style.boxSizing = "border-box";
-    cardEl.style.overflow = "hidden";
-    cardEl.style.backgroundColor = template.backgroundColor;
+    cardEl.setCssStyles({
+      width: `${CARD_WIDTH}px`,
+      height: `${CARD_HEIGHT}px`,
+      boxSizing: "border-box",
+      overflow: "hidden",
+      backgroundColor: template.backgroundColor,
+    });
     this.applyContextStyles(cardEl, template, context);
 
     template.layout(cardEl, blocks, page, context);
@@ -53,34 +69,40 @@ export class TemplateRenderer {
     const chromeFontSize = context?.chromeFontSize;
     const showHeader = context?.user?.showHeader !== false;
     const hasAvatar = !!(context?.user?.avatar && context.user.avatar.trim());
-    cardEl.style.setProperty("--header-reserve", `${headerReservePx(showHeader, hasAvatar)}px`);
+    cardEl.setCssProps({ "--header-reserve": `${headerReservePx(showHeader, hasAvatar)}px` });
     if (fontSize) {
-      cardEl.style.fontSize = `${fontSize}px`;
+      cardEl.setCssStyles({ fontSize: `${fontSize}px` });
     }
     if (chromeFontSize) {
-      cardEl.style.setProperty("--chrome-size", `${chromeFontSize}px`);
+      cardEl.setCssProps({ "--chrome-size": `${chromeFontSize}px` });
     }
     if (theme?.fontFamily) {
-      cardEl.style.setProperty("--body-font", theme.fontFamily);
-      cardEl.style.setProperty("--display", theme.fontFamily);
-      cardEl.style.setProperty("--caption", theme.fontFamily);
+      cardEl.setCssProps({
+        "--body-font": theme.fontFamily,
+        "--display": theme.fontFamily,
+        "--caption": theme.fontFamily,
+      });
     }
     if (theme?.textColor) {
-      cardEl.style.setProperty("--body", theme.textColor);
-      cardEl.style.setProperty("--heading", theme.textColor);
+      cardEl.setCssProps({
+        "--body": theme.textColor,
+        "--heading": theme.textColor,
+      });
     }
     if (theme?.backgroundColor) {
-      cardEl.style.setProperty("--paper", theme.backgroundColor);
-      cardEl.style.backgroundColor = theme.backgroundColor;
+      cardEl.setCssProps({ "--paper": theme.backgroundColor });
+      cardEl.setCssStyles({ backgroundColor: theme.backgroundColor });
     } else {
-      cardEl.style.backgroundColor = template.backgroundColor;
+      cardEl.setCssStyles({ backgroundColor: template.backgroundColor });
     }
     if (theme?.accentColor) {
-      cardEl.style.setProperty("--accent", theme.accentColor);
-      cardEl.style.setProperty("--accent-soft", theme.accentColor);
+      cardEl.setCssProps({
+        "--accent": theme.accentColor,
+        "--accent-soft": theme.accentColor,
+      });
     }
     if (typeof theme?.spacing === "number" && theme.spacing > 0) {
-      cardEl.style.setProperty("--para-gap", `${theme.spacing}px`);
+      cardEl.setCssProps({ "--para-gap": `${theme.spacing}px` });
     }
   }
 
@@ -97,7 +119,7 @@ export class TemplateRenderer {
   ): ShadowRoot {
     const shadow = container.attachShadow({ mode: "open" });
 
-    shadow.appendChild(this.createStyleElement(template));
+    shadow.adoptedStyleSheets = [getStylesheet(template)];
     shadow.appendChild(this.createCardElement(blocks, page, template, context));
 
     return shadow;
@@ -117,13 +139,15 @@ export class TemplateRenderer {
     while (container.firstChild) {
       container.removeChild(container.firstChild);
     }
-    container.style.width = `${CARD_WIDTH}px`;
-    container.style.height = `${CARD_HEIGHT}px`;
-    container.style.backgroundColor = context?.theme?.backgroundColor || template.backgroundColor;
-    container.style.overflow = "hidden";
-    container.style.boxSizing = "border-box";
+    container.setCssStyles({
+      width: `${CARD_WIDTH}px`,
+      height: `${CARD_HEIGHT}px`,
+      backgroundColor: context?.theme?.backgroundColor || template.backgroundColor,
+      overflow: "hidden",
+      boxSizing: "border-box",
+    });
 
-    container.appendChild(this.createStyleElement(template));
+    container.appendChild(createStylesheetLink(template));
     const cardEl = this.createCardElement(blocks, page, template, context);
     container.appendChild(cardEl);
     return cardEl;

@@ -53,8 +53,8 @@ export class SmartRedSettingTab extends PluginSettingTab {
   display(): void {
     const { containerEl } = this;
     containerEl.empty();
-    containerEl.createEl('h2', { text: 'Smart RED Settings' });
-    containerEl.createEl('h3', { text: 'Template and Typography' });
+    new Setting(containerEl).setName('Smart RED Settings').setHeading();
+    new Setting(containerEl).setName('Template and Typography').setHeading();
 
     new Setting(containerEl)
       .setName('Template')
@@ -106,7 +106,7 @@ export class SmartRedSettingTab extends PluginSettingTab {
       text: 'A line with only --- starts a new card. Copy exports the current page to your clipboard; PNG downloads the current page; ZIP exports every page.',
     });
 
-    containerEl.createEl('h3', { text: 'User Info' });
+    new Setting(containerEl).setName('User Info').setHeading();
 
     new Setting(containerEl)
       .setName('Avatar')
@@ -225,7 +225,7 @@ export class SmartRedSettingTab extends PluginSettingTab {
           });
       });
 
-    containerEl.createEl('h3', { text: 'Custom Theme' });
+    new Setting(containerEl).setName('Custom Theme').setHeading();
 
     new Setting(containerEl)
       .setName('Font family')
@@ -294,7 +294,7 @@ export class SmartRedSettingTab extends PluginSettingTab {
           });
       });
 
-    containerEl.createEl('h3', { text: 'Export' });
+    new Setting(containerEl).setName('Export').setHeading();
 
     new Setting(containerEl)
       .setName('Export scale')

@@ -1,6 +1,6 @@
 {
   "name": "smart-red",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Convert Obsidian notes to Xiaohongshu (RED) style images",
   "main": "main.js",
   "scripts": {
@@ -21,8 +21,8 @@
   },
   "dependencies": {
     "@cto.af/linebreak": "^4.0.3",
+    "fflate": "^0.8.3",
     "html-to-image": "1.11.11",
-    "html2canvas": "1.4.1",
-    "jszip": "3.10.1"
+    "html2canvas": "1.4.1"
   }
 }

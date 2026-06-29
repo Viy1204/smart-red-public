@@ -106,7 +106,10 @@ describe("TemplateRenderer", () => {
     const card = renderer.renderExportCard(container, [block], page, editorialTemplate);
 
     expect(container.shadowRoot).toBeNull();
-    expect(container.querySelector("style")!.textContent).toContain(".sr-editorial-card");
+    const link = container.querySelector("link") as HTMLLinkElement | null;
+    expect(link).not.toBeNull();
+    expect(link!.rel).toBe("stylesheet");
+    expect(link!.href).toContain("data:text/css");
     expect(container.querySelector(".sr-editorial-card")).toBe(card);
     expect(container.style.width).toBe(`${CARD_WIDTH}px`);
     expect(container.style.height).toBe(`${CARD_HEIGHT}px`);

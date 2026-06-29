@@ -3,6 +3,7 @@ import { Window } from "happy-dom";
 const window = new Window();
 const document = window.document;
 
+(globalThis as any).window = window;
 (globalThis as any).document = document;
 (globalThis as any).HTMLElement = window.HTMLElement;
 (globalThis as any).HTMLDivElement = window.HTMLDivElement;
@@ -39,3 +40,52 @@ const document = window.document;
   return el;
 };
 (window.HTMLElement.prototype as any).setAttribute = window.HTMLElement.prototype.setAttribute;
+
+// Mock Obsidian's setCssStyles / setCssProps helpers.
+(window.HTMLElement.prototype as any).setCssStyles = function (styles: Record<string, string>) {
+  for (const [key, value] of Object.entries(styles)) {
+    (this.style as any)[key] = value;
+  }
+};
+(window.HTMLElement.prototype as any).setCssProps = function (props: Record<string, string>) {
+  for (const [key, value] of Object.entries(props)) {
+    this.style.setProperty(key, value);
+  }
+};
+
+// Mock constructable stylesheets for Shadow DOM templates.
+class MockCSSStyleSheet {
+  private css = '';
+  replaceSync(text: string) {
+    this.css = text;
+  }
+  toString() {
+    return this.css;
+  }
+}
+(globalThis as any).CSSStyleSheet = MockCSSStyleSheet;
+(globalThis as any).CSSStyleSheet = MockCSSStyleSheet;
+
+const originalAttachShadow = (window.HTMLElement.prototype as any).attachShadow;
+(window.HTMLElement.prototype as any).attachShadow = function (init: ShadowRootInit) {
+  const shadow = originalAttachShadow.call(this, init);
+  (shadow as any).adoptedStyleSheets = [];
+  Object.defineProperty(shadow, 'adoptedStyleSheets', {
+    set(sheets: unknown[]) {
+      (shadow as any).__adoptedStyleSheets = sheets;
+      const style = document.createElement('style');
+      style.textContent = sheets
+        .map((s: any) => (typeof s === 'string' ? s : s.toString()))
+        .join('\n');
+      if (shadow.firstChild) {
+        shadow.insertBefore(style, shadow.firstChild);
+      } else {
+        shadow.appendChild(style);
+      }
+    },
+    get() {
+      return (shadow as any).__adoptedStyleSheets || [];
+    },
+  });
+  return shadow;
+};

@@ -15,7 +15,6 @@ import {
 import { ExportPipeline, pageFileName } from './export-pipeline';
 import { copyPngBlobToClipboard } from './clipboard';
 import { getTemplate, templates } from './templates/gallery';
-import { BRAND_FONT_CSS } from './templates/brand-fonts';
 import { stripInlineMarkdown } from './templates/utils';
 import { buildRenderSegments } from './section-splitter';
 import type { SmartRedSettings } from './settings';
@@ -32,30 +31,7 @@ const PAGE_SAFETY_PX = 0;
 const IMAGE_MAX_HEIGHT = 960;
 const IMAGE_LOAD_TIMEOUT_MS = 1600;
 
-const BRAND_FONT_FACES = [
-  '600 16px "Playfair Display"',
-  '400 16px "Source Serif 4"',
-  '600 16px "Inter"',
-  '600 16px "Hanken Grotesk"',
-];
-
-// Brand-inspired templates (Apple/Wired/Notion/Lovable) lean on display faces
-// that Windows lacks; inject the bundled Latin woff2 subsets once into the host
-// document so both the Shadow DOM preview and the light-DOM export pick them up,
-// fully offline. CJK still falls back to the system serif/sans.
-function ensureBrandFonts(): void {
-  if (document.getElementById('smart-red-brand-fonts')) return;
-  const style = document.createElement('style');
-  style.id = 'smart-red-brand-fonts';
-  style.textContent = BRAND_FONT_CSS;
-  document.head.appendChild(style);
-  const fontApi = document.fonts as FontFaceSet | undefined;
-  if (fontApi?.load) {
-    Promise.all(BRAND_FONT_FACES.map((face) => fontApi.load(face))).catch((err) =>
-      console.debug('Smart RED: brand font preload skipped', err)
-    );
-  }
-}
+// Brand display fonts are loaded from styles.css so Obsidian can manage them.
 
 // Convert an absolute filesystem path (Windows drive, UNC, or POSIX) to a
 // file:// URL the renderer can load. Returns null for anything else (URLs,
@@ -141,7 +117,6 @@ export class RedView extends ItemView {
   }
 
   async onOpen(): Promise<void> {
-    ensureBrandFonts();
     const container = this.containerEl.children[1];
     container.empty();
     container.addClass('smart-red-view');
@@ -775,15 +750,12 @@ export class RedView extends ItemView {
       const flow = root.querySelector('.article-flow') as HTMLElement | null;
       if (!card || !flow) return estimate(normalized);
 
-      root.style.height = 'auto';
-      card.style.height = 'auto';
-      card.style.minHeight = '0';
-      card.style.overflow = 'visible';
+      root.setCssStyles({ height: 'auto' });
+      card.setCssStyles({ height: 'auto', minHeight: '0', overflow: 'visible' });
       for (const chrome of Array.from(card.querySelectorAll('.card-chrome')) as HTMLElement[]) {
-        chrome.style.display = 'none';
+        chrome.setCssStyles({ display: 'none' });
       }
-      flow.style.height = 'auto';
-      flow.style.overflow = 'visible';
+      flow.setCssStyles({ height: 'auto', overflow: 'visible' });
 
       const measured = this.measureElementHeight(flow, false);
       return measured > 0 ? measured : estimate(normalized);
@@ -925,17 +897,12 @@ export class RedView extends ItemView {
 
   private createMeasurementRoot(templateBackgroundColor: string): HTMLElement {
     const root = document.createElement('div');
-    root.className = 'smart-red-measurement-root';
-    root.style.position = 'fixed';
-    root.style.left = '0';
-    root.style.top = '0';
-    root.style.width = `${CARD_WIDTH}px`;
-    root.style.height = 'auto';
-    root.style.opacity = '0';
-    root.style.pointerEvents = 'none';
-    root.style.zIndex = '-1';
-    root.style.contain = 'layout style paint';
-    root.style.backgroundColor = this.pluginSettings.theme.backgroundColor || templateBackgroundColor;
+    root.className = 'smart-red-offscreen-root smart-red-measurement-root';
+    root.setCssStyles({
+      width: `${CARD_WIDTH}px`,
+      height: 'auto',
+      backgroundColor: this.pluginSettings.theme.backgroundColor || templateBackgroundColor,
+    });
     document.body.appendChild(root);
     return root;
   }
@@ -1022,7 +989,7 @@ export class RedView extends ItemView {
 
   private observePreviewResize(): void {
     if (!this.previewContainer) return;
-    const ResizeObserverCtor = (globalThis as typeof globalThis & {
+    const ResizeObserverCtor = (window as typeof window & {
       ResizeObserver?: typeof ResizeObserver;
     }).ResizeObserver;
     if (!ResizeObserverCtor) return;
@@ -1061,16 +1028,12 @@ export class RedView extends ItemView {
 
   private createExportRoot(className: string, templateBackgroundColor: string): HTMLElement {
     const exportRoot = document.createElement('div');
-    exportRoot.className = className;
-    exportRoot.style.position = 'fixed';
-    exportRoot.style.left = '0';
-    exportRoot.style.top = '0';
-    exportRoot.style.width = `${CARD_WIDTH}px`;
-    exportRoot.style.minHeight = `${CARD_HEIGHT}px`;
-    exportRoot.style.backgroundColor = this.pluginSettings.theme.backgroundColor || templateBackgroundColor;
-    exportRoot.style.pointerEvents = 'none';
-    exportRoot.style.zIndex = '0';
-    exportRoot.style.contain = 'layout style paint';
+    exportRoot.className = `smart-red-offscreen-root ${className}`;
+    exportRoot.setCssStyles({
+      width: `${CARD_WIDTH}px`,
+      minHeight: `${CARD_HEIGHT}px`,
+      backgroundColor: this.pluginSettings.theme.backgroundColor || templateBackgroundColor,
+    });
     document.body.appendChild(exportRoot);
     return exportRoot;
   }
@@ -1159,9 +1122,10 @@ export class RedView extends ItemView {
         const containers: HTMLElement[] = [];
         for (const decision of this.decisions) {
           const wrapper = document.createElement('div');
-          wrapper.style.width = `${CARD_WIDTH}px`;
-          wrapper.style.height = `${CARD_HEIGHT}px`;
-          wrapper.style.backgroundColor = this.pluginSettings.theme.backgroundColor || template.backgroundColor;
+          wrapper.className = 'smart-red-export-card';
+          wrapper.setCssStyles({
+            backgroundColor: this.pluginSettings.theme.backgroundColor || template.backgroundColor,
+          });
           exportRoot.appendChild(wrapper);
           const pageBlocks = normalizeParagraphFragments(decision.blocks);
           this.renderer.renderExportCard(wrapper, pageBlocks, decision, template, this.getRenderContext());

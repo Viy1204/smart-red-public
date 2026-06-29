@@ -1,5 +1,5 @@
 export async function copyPngBlobToClipboard(blob: Blob): Promise<void> {
-  const ClipboardItemCtor = (globalThis as typeof globalThis & {
+  const ClipboardItemCtor = (window as typeof window & {
     ClipboardItem?: typeof ClipboardItem;
   }).ClipboardItem;
 
