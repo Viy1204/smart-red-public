@@ -1,6 +1,6 @@
 # Smart RED
 
-![Obsidian](https://img.shields.io/badge/Obsidian-7C3AED?style=flat-square) ![version](https://img.shields.io/badge/version-0.1.0-blue?style=flat-square) ![build](https://img.shields.io/badge/build-passing-brightgreen?style=flat-square)
+![Obsidian](https://img.shields.io/badge/Obsidian-7C3AED?style=flat-square) ![obsidian-version](https://img.shields.io/badge/Obsidian-%3E%3D0.15.0-7C3AED?style=flat-square) ![version](https://img.shields.io/badge/version-0.1.0-blue?style=flat-square) ![release](https://img.shields.io/github/v/release/Viy1204/smart-red-public?style=flat-square) ![license](https://img.shields.io/badge/license-MIT-blue?style=flat-square) ![typescript](https://img.shields.io/badge/TypeScript-3178C6?style=flat-square&logo=typescript&logoColor=white)
 
 将 Obsidian 笔记一键转换为**小红书风格图片卡片**（1080×1440px，3:4 比例）的插件。自动分页、多模板、支持图片和表格渲染、批量导出。
 
