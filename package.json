@@ -1,0 +1,28 @@
+{
+  "name": "smart-red",
+  "version": "0.1.0",
+  "description": "Convert Obsidian notes to Xiaohongshu (RED) style images",
+  "main": "main.js",
+  "scripts": {
+    "dev": "node esbuild.config.mjs",
+    "build": "node esbuild.config.mjs production",
+    "test": "bun test"
+  },
+  "keywords": ["obsidian", "plugin", "xiaohongshu"],
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "@types/node": "^16.11.6",
+    "builtin-modules": "^3.3.0",
+    "esbuild": "^0.17.3",
+    "happy-dom": "^20.10.2",
+    "obsidian": "latest",
+    "typescript": "4.7.4"
+  },
+  "dependencies": {
+    "@cto.af/linebreak": "^4.0.3",
+    "html-to-image": "1.11.11",
+    "html2canvas": "1.4.1",
+    "jszip": "3.10.1"
+  }
+}

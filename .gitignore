@@ -1,0 +1,21 @@
+# dependencies
+node_modules
+
+# build output
+main.js
+*.js.map
+
+# caches
+.DS_Store
+*.log
+.env
+
+# IDE
+.vscode/
+.idea/
+
+# Obsidian
+.obsidian/
+
+# data
+data.json

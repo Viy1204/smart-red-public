@@ -1,0 +1,22 @@
+Bundled Font Licenses
+=====================
+
+This plugin bundles subsets of the following fonts as base64-encoded WOFF2
+files in src/templates/brand-fonts.ts for offline rendering of the brand
+templates (Apple, Notion, Lovable, Wired):
+
+- Inter (https://rsms.me/inter/)
+- Hanken Grotesk (https://hanken.co/products/hanken-grotesk)
+- Playfair Display (https://fonts.google.com/specimen/Playfair+Display)
+- Source Serif 4 (https://fonts.google.com/specimen/Source+Serif+4)
+
+All four fonts are licensed under the SIL Open Font License, Version 1.1.
+You may use them according to the terms of that license. The full text is
+available at:
+
+https://scripts.sil.org/OFL
+
+The brand templates reference the visual identities of Apple, Notion,
+Lovable, The Verge, Wired, Claude (Anthropic), MiniMax, xAI, and Figma.
+These references are for aesthetic inspiration only; this plugin is not
+affiliated with, endorsed by, or sponsored by any of those companies.

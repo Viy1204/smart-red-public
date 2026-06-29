@@ -1,0 +1,47 @@
+import type { SemanticBlock } from "../types";
+import type { PaginationDecision } from "../pagination-engine";
+
+export interface TemplateUserInfo {
+  avatar: string;
+  nickname: string;
+  handle: string;
+  subtitle: string;
+  footer: string;
+  showHeader: boolean;
+  showFooter: boolean;
+  roundAvatar: boolean;
+  verifiedBadge: boolean;
+}
+
+export interface TemplateThemeOverrides {
+  fontFamily: string;
+  textColor: string;
+  backgroundColor: string;
+  accentColor: string;
+  spacing: number;
+}
+
+export interface TemplateRenderContext {
+  fontSize?: number;
+  chromeFontSize?: number;
+  user?: Partial<TemplateUserInfo>;
+  theme?: Partial<TemplateThemeOverrides>;
+  sectionTitle?: string;
+}
+
+export interface Template {
+  name: string;
+  displayName: string;
+  cardClassName: string;
+  cardPadding: number;
+  baseFontSize: number;
+  lineHeightRatio: number;
+  backgroundColor: string;
+  styles: string;
+  layout(
+    el: HTMLElement,
+    blocks: SemanticBlock[],
+    page: PaginationDecision,
+    context?: TemplateRenderContext
+  ): void;
+}

@@ -1,0 +1,9 @@
+{
+    "id": "smart-red",
+    "name": "Smart RED",
+    "version": "0.1.0",
+    "minAppVersion": "0.15.0",
+    "description": "Convert Obsidian notes to Xiaohongshu (RED) style images",
+    "author": "Viy1204",
+    "isDesktopOnly": true
+}
