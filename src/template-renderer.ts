@@ -89,6 +89,7 @@ export class TemplateRenderer {
     cardEl.setCssProps({
       "--header-reserve": `${computeHeaderReserve(context?.user, context?.chromeFontSize)}px`,
       "--footer-reserve": `${footerReservePx(context?.user?.showFooter !== false)}px`,
+      "--top-safe": `${Math.max(0, context?.topSafeArea ?? 0)}px`,
     });
     if (fontSize) {
       cardEl.setCssStyles({ fontSize: `${fontSize}px` });

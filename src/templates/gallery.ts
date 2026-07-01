@@ -209,7 +209,7 @@ th {
   gap: 24px;
 }
 .card-chrome.top {
-  top: 34px;
+  top: calc(34px + var(--top-safe, 0px));
   padding-bottom: 16px;
   border-bottom: 1px solid var(--rule);
 }
@@ -327,7 +327,7 @@ ${BASE_STYLES}
   width: 1080px;
   height: 1440px;
   padding: ${config.padding}px;
-  padding-top: calc(${config.padding}px + var(--header-reserve, ${HEADER_RESERVE_BASE_PX}px));
+  padding-top: calc(${config.padding}px + var(--top-safe, 0px) + var(--header-reserve, ${HEADER_RESERVE_BASE_PX}px));
   padding-bottom: calc(${config.padding}px + var(--footer-reserve, ${FOOTER_CONTENT_RESERVE_PX}px));
   box-sizing: border-box;
   position: relative;
@@ -534,6 +534,9 @@ export const neoGridTemplate = makeTemplate({
   display: inline;
   background: #eaff3f;
   box-shadow: 14px 0 0 #eaff3f, -10px 0 0 #eaff3f;
+  line-height: 1.4;
+  box-decoration-break: clone;
+  -webkit-box-decoration-break: clone;
 }
 .sr-neo-grid-card blockquote { box-shadow: 12px 12px 0 var(--accent); }
 `,
@@ -1295,6 +1298,9 @@ export const figmaTemplate = makeTemplate({
   display: inline;
   background: #dceeb1;
   box-shadow: 12px 0 0 #dceeb1, -8px 0 0 #dceeb1;
+  line-height: 1.4;
+  box-decoration-break: clone;
+  -webkit-box-decoration-break: clone;
 }
 .sr-figma-card blockquote { border: 0; border-radius: 16px; }
 .sr-figma-card .image-block img { border-radius: 12px; }

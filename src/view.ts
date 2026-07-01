@@ -12,7 +12,7 @@ import {
   computeHeaderReserve,
   footerReservePx,
 } from './template-renderer';
-import { ExportPipeline, pageFileName } from './export-pipeline';
+import { ExportPipeline, pageFileName, sanitizeFileName } from './export-pipeline';
 import { copyPngBlobToClipboard } from './clipboard';
 import { getTemplate, templates } from './templates/gallery';
 import { stripInlineMarkdown } from './templates/utils';
@@ -333,6 +333,7 @@ export class RedView extends ItemView {
       user: { ...this.pluginSettings.user, avatar: this.resolvedAvatar },
       theme: this.pluginSettings.theme,
       sectionTitle: this.documentTitle,
+      topSafeArea: this.pluginSettings.topSafeArea,
     };
   }
 
@@ -585,7 +586,9 @@ export class RedView extends ItemView {
 
   private getAvailableContentHeight(cardPadding: number): number {
     const user = { ...this.pluginSettings.user, avatar: this.resolvedAvatar };
-    const topPadding = cardPadding + computeHeaderReserve(user, this.pluginSettings.chromeFontSize);
+    const topSafe = Math.max(0, this.pluginSettings.topSafeArea ?? 0);
+    const topPadding =
+      cardPadding + topSafe + computeHeaderReserve(user, this.pluginSettings.chromeFontSize);
     const bottomPadding = cardPadding + footerReservePx(user.showFooter !== false);
     return Math.max(0, CARD_HEIGHT - topPadding - bottomPadding - PAGE_SAFETY_PX);
   }
@@ -1096,7 +1099,7 @@ export class RedView extends ItemView {
 
       try {
         const blob = await this.exporter.renderToBlob(exportRoot, this.currentPageIndex);
-        this.downloadBlob(blob, pageFileName(this.currentPageIndex));
+        this.downloadBlob(blob, pageFileName(this.currentPageIndex, this.documentTitle));
         new Notice('Smart RED PNG exported');
       } catch (err) {
         console.error('Smart RED: export failed', err);
@@ -1131,8 +1134,8 @@ export class RedView extends ItemView {
           containers.push(wrapper);
         }
 
-        const blob = await this.exporter.exportAllPages(containers);
-        this.downloadBlob(blob, '小红书笔记_全部页面.zip');
+        const blob = await this.exporter.exportAllPages(containers, this.documentTitle);
+        this.downloadBlob(blob, `${sanitizeFileName(this.documentTitle)}.zip`);
         new Notice('Smart RED ZIP exported');
       } catch (err) {
         console.error('Smart RED: export failed', err);

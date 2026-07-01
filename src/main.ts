@@ -23,6 +23,9 @@ function normalizeSettings(raw: Partial<SmartRedSettings> & { headingLevel?: unk
       ...DEFAULT_SETTINGS.theme,
       ...(raw.theme || {}),
     },
+    topSafeArea: typeof raw.topSafeArea === 'number' && raw.topSafeArea >= 0
+      ? raw.topSafeArea
+      : DEFAULT_SETTINGS.topSafeArea,
     exportPixelRatio,
   };
 }

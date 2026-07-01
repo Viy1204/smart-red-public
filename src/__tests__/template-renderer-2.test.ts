@@ -167,6 +167,16 @@ describe("theme overrides", () => {
     expect(card.style.getPropertyValue("--strong-color")).toBe("#ff0000");
   });
 
+  test("top safe area publishes --top-safe", () => {
+    const block = makeBlock(BlockType.Paragraph, "x");
+    const page: PaginationDecision = { pageIndex: 0, blocks: [block], hasContinuation: false };
+    const shadow = renderer.renderCard(document.createElement("div"), [block], page, editorialTemplate, {
+      topSafeArea: 120,
+    });
+    const card = shadow.querySelector(".sr-editorial-card") as HTMLElement;
+    expect(card.style.getPropertyValue("--top-safe")).toBe("120px");
+  });
+
   test("per-level heading colors publish --h1/2/3-color", () => {
     const block = makeBlock(BlockType.Paragraph, "x");
     const page: PaginationDecision = { pageIndex: 0, blocks: [block], hasContinuation: false };

@@ -13,6 +13,7 @@ export interface SmartRedSettings {
   headingLevel: HeadingSplitLevel;
   user: TemplateUserInfo;
   theme: TemplateThemeOverrides;
+  topSafeArea: number;
   exportPixelRatio: number;
 }
 
@@ -32,6 +33,7 @@ export const DEFAULT_SETTINGS: SmartRedSettings = {
     roundAvatar: true,
     verifiedBadge: false,
   },
+  topSafeArea: 0,
   theme: {
     fontFamily: '',
     textColor: '',
@@ -257,6 +259,21 @@ export class SmartRedSettingTab extends PluginSettingTab {
             this.plugin.refreshView();
           });
       });
+
+    new Setting(containerEl)
+      .setName('Top safe area')
+      .setDesc('Blank reserved at the very top (px) so the Xiaohongshu AI-content banner covers empty space instead of your title')
+      .addSlider((slider) =>
+        slider
+          .setLimits(0, 240, 10)
+          .setValue(this.plugin.settings.topSafeArea ?? 0)
+          .setDynamicTooltip()
+          .onChange(async (value) => {
+            this.plugin.settings.topSafeArea = value;
+            await this.plugin.saveSettings();
+            this.plugin.refreshView();
+          })
+      );
 
     new Setting(containerEl).setName('Custom Theme').setHeading();
 
