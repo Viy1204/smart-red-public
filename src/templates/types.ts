@@ -31,6 +31,9 @@ export interface TemplateRenderContext {
   user?: Partial<TemplateUserInfo>;
   theme?: Partial<TemplateThemeOverrides>;
   sectionTitle?: string;
+  // Blank reserve at the very top of every card so Xiaohongshu's AI-content
+  // banner overlays empty space instead of the header/first line.
+  topSafeArea?: number;
 }
 
 export interface Template {

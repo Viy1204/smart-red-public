@@ -45,10 +45,18 @@ describe("DEFAULT_EXPORT_CONFIG", () => {
 });
 
 describe("pageFileName", () => {
-	test("generates correct Chinese file names", () => {
-		expect(pageFileName(0)).toBe("小红书笔记_第1页.png");
-		expect(pageFileName(1)).toBe("小红书笔记_第2页.png");
-		expect(pageFileName(4)).toBe("小红书笔记_第5页.png");
+	test("names pages as <title>-NN.png with a zero-padded index", () => {
+		expect(pageFileName(0, "知识的诅咒")).toBe("知识的诅咒-01.png");
+		expect(pageFileName(9, "知识的诅咒")).toBe("知识的诅咒-10.png");
+	});
+
+	test("falls back to a default base when no title is given", () => {
+		expect(pageFileName(0)).toBe("小红书笔记-01.png");
+		expect(pageFileName(0, "   ")).toBe("小红书笔记-01.png");
+	});
+
+	test("strips filesystem-illegal characters from the title", () => {
+		expect(pageFileName(0, 'a/b:c*?"<>|d')).toBe("abcd-01.png");
 	});
 });
 

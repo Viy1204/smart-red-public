@@ -28,9 +28,20 @@ export const DEFAULT_EXPORT_CONFIG: ExportConfig = {
 	includeStyleProperties,
 };
 
-/** File naming pattern for exported pages */
-export function pageFileName(index: number): string {
-	return `小红书笔记_第${index + 1}页.png`;
+/** Strip characters that are illegal in file names across OSes. */
+export function sanitizeFileName(name: string): string {
+	const cleaned = (name || "")
+		.replace(/[\\/:*?"<>|]/g, "")
+		.replace(/\s+/g, " ")
+		.trim()
+		.slice(0, 60)
+		.trim();
+	return cleaned || "小红书笔记";
+}
+
+/** Exported page name: `<title>-01.png`. */
+export function pageFileName(index: number, title?: string): string {
+	return `${sanitizeFileName(title ?? "")}-${String(index + 1).padStart(2, "0")}.png`;
 }
 
 export function isLikelyBlankImageData(
@@ -124,13 +135,13 @@ export class ExportPipeline {
 	 * Export all page containers as a ZIP file.
 	 * Each page is named: 小红书笔记_第N页.png
 	 */
-	async exportAllPages(containers: HTMLElement[]): Promise<Blob> {
+	async exportAllPages(containers: HTMLElement[], title?: string): Promise<Blob> {
 		const files: Record<string, Uint8Array> = {};
 
 		for (let i = 0; i < containers.length; i++) {
 			const blob = await this.renderToBlob(containers[i], i);
 			const array = new Uint8Array(await blob.arrayBuffer());
-			files[pageFileName(i)] = array;
+			files[pageFileName(i, title)] = array;
 		}
 
 		return new Promise((resolve, reject) => {
