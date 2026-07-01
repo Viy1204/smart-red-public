@@ -154,6 +154,32 @@ describe("renderAllCards", () => {
   });
 });
 
+describe("theme overrides", () => {
+  const renderer = new TemplateRenderer();
+
+  test("bold color publishes --strong-color on the card", () => {
+    const block = makeBlock(BlockType.Paragraph, "x");
+    const page: PaginationDecision = { pageIndex: 0, blocks: [block], hasContinuation: false };
+    const shadow = renderer.renderCard(document.createElement("div"), [block], page, editorialTemplate, {
+      theme: { boldColor: "#ff0000" },
+    });
+    const card = shadow.querySelector(".sr-editorial-card") as HTMLElement;
+    expect(card.style.getPropertyValue("--strong-color")).toBe("#ff0000");
+  });
+
+  test("per-level heading colors publish --h1/2/3-color", () => {
+    const block = makeBlock(BlockType.Paragraph, "x");
+    const page: PaginationDecision = { pageIndex: 0, blocks: [block], hasContinuation: false };
+    const shadow = renderer.renderCard(document.createElement("div"), [block], page, editorialTemplate, {
+      theme: { h1Color: "#111111", h2Color: "#222222", h3Color: "#333333" },
+    });
+    const card = shadow.querySelector(".sr-editorial-card") as HTMLElement;
+    expect(card.style.getPropertyValue("--h1-color")).toBe("#111111");
+    expect(card.style.getPropertyValue("--h2-color")).toBe("#222222");
+    expect(card.style.getPropertyValue("--h3-color")).toBe("#333333");
+  });
+});
+
 describe("Card dimensions", () => {
   test("CARD_WIDTH is 1080", () => {
     expect(CARD_WIDTH).toBe(1080);

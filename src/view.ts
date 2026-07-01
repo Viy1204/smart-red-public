@@ -9,8 +9,8 @@ import {
   TemplateRenderer,
   CARD_WIDTH,
   CARD_HEIGHT,
-  FOOTER_CONTENT_RESERVE_PX,
-  headerReservePx,
+  computeHeaderReserve,
+  footerReservePx,
 } from './template-renderer';
 import { ExportPipeline, pageFileName } from './export-pipeline';
 import { copyPngBlobToClipboard } from './clipboard';
@@ -584,10 +584,9 @@ export class RedView extends ItemView {
   }
 
   private getAvailableContentHeight(cardPadding: number): number {
-    const showHeader = this.pluginSettings.user.showHeader !== false;
-    const showFooter = this.pluginSettings.user.showFooter !== false;
-    const topPadding = cardPadding + headerReservePx(showHeader, !!this.resolvedAvatar);
-    const bottomPadding = cardPadding + (showFooter ? FOOTER_CONTENT_RESERVE_PX : 0);
+    const user = { ...this.pluginSettings.user, avatar: this.resolvedAvatar };
+    const topPadding = cardPadding + computeHeaderReserve(user, this.pluginSettings.chromeFontSize);
+    const bottomPadding = cardPadding + footerReservePx(user.showFooter !== false);
     return Math.max(0, CARD_HEIGHT - topPadding - bottomPadding - PAGE_SAFETY_PX);
   }
 

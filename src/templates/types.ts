@@ -18,6 +18,10 @@ export interface TemplateThemeOverrides {
   textColor: string;
   backgroundColor: string;
   accentColor: string;
+  boldColor: string;
+  h1Color: string;
+  h2Color: string;
+  h3Color: string;
   spacing: number;
 }
 

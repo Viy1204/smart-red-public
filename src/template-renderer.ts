@@ -1,20 +1,46 @@
 import type { SemanticBlock } from "./types";
 import type { PaginationDecision } from "./pagination-engine";
-import type { Template, TemplateRenderContext } from "./templates/types";
+import type { Template, TemplateRenderContext, TemplateUserInfo } from "./templates/types";
 
 export const CARD_WIDTH = 1080;
 export const CARD_HEIGHT = 1440;
 
 // Single source of truth for the chrome height the content budget reserves.
 // Both the template CSS (gallery.ts padding) and the pagination budget
-// (view.ts getAvailableContentHeight) must agree, so they import from here.
+// (view.ts getAvailableContentHeight) must agree — the CSS uses these as the
+// var() fallbacks and the renderer/view compute the exact value below.
 export const HEADER_RESERVE_BASE_PX = 36;
-export const HEADER_RESERVE_AVATAR_PX = 104;
 export const FOOTER_CONTENT_RESERVE_PX = 42;
 
-export function headerReservePx(showHeader: boolean, hasAvatar: boolean): number {
-  if (!showHeader) return 0;
-  return hasAvatar ? HEADER_RESERVE_AVATAR_PX : HEADER_RESERVE_BASE_PX;
+type ProfileUser = Partial<
+  Pick<TemplateUserInfo, "showHeader" | "showFooter" | "avatar" | "nickname" | "handle" | "subtitle">
+>;
+
+const has = (v: string | undefined) => !!(v && v.trim());
+
+// The profile header height scales with the chrome font size (avatar = 2.9x,
+// text lines ± a few px) and with how many of nickname/handle/subtitle are set.
+// A fixed reserve either overlaps the body (too small) or strands whitespace
+// (too big, shrinking the page budget), so compute the real height + breathing.
+export function computeHeaderReserve(user: ProfileUser | undefined, chromeFontSize = 22): number {
+  if (user?.showHeader === false) return 0;
+  const c = chromeFontSize || 22;
+  const avatar = has(user?.avatar);
+  if (!avatar && !has(user?.nickname) && !has(user?.handle) && !has(user?.subtitle)) {
+    return HEADER_RESERVE_BASE_PX;
+  }
+  const lineFs: number[] = [];
+  if (has(user?.nickname)) lineFs.push(c + 4);
+  if (has(user?.handle)) lineFs.push(c - 1);
+  if (has(user?.subtitle)) lineFs.push(c - 4);
+  const textCol =
+    lineFs.reduce((sum, fs) => sum + fs * 1.3, 0) + Math.max(0, lineFs.length - 1) * 5;
+  const avatarPx = avatar ? c * 2.9 : 0;
+  return Math.round(Math.max(avatarPx, textCol) + 24);
+}
+
+export function footerReservePx(showFooter: boolean): number {
+  return showFooter ? FOOTER_CONTENT_RESERVE_PX : 0;
 }
 
 // Cache constructable stylesheets per template so we don't rebuild them.
@@ -60,9 +86,10 @@ export class TemplateRenderer {
     const theme = context?.theme;
     const fontSize = context?.fontSize;
     const chromeFontSize = context?.chromeFontSize;
-    const showHeader = context?.user?.showHeader !== false;
-    const hasAvatar = !!(context?.user?.avatar && context.user.avatar.trim());
-    cardEl.setCssProps({ "--header-reserve": `${headerReservePx(showHeader, hasAvatar)}px` });
+    cardEl.setCssProps({
+      "--header-reserve": `${computeHeaderReserve(context?.user, context?.chromeFontSize)}px`,
+      "--footer-reserve": `${footerReservePx(context?.user?.showFooter !== false)}px`,
+    });
     if (fontSize) {
       cardEl.setCssStyles({ fontSize: `${fontSize}px` });
     }
@@ -94,6 +121,12 @@ export class TemplateRenderer {
         "--accent-soft": theme.accentColor,
       });
     }
+    if (theme?.boldColor) {
+      cardEl.setCssProps({ "--strong-color": theme.boldColor });
+    }
+    if (theme?.h1Color) cardEl.setCssProps({ "--h1-color": theme.h1Color });
+    if (theme?.h2Color) cardEl.setCssProps({ "--h2-color": theme.h2Color });
+    if (theme?.h3Color) cardEl.setCssProps({ "--h3-color": theme.h3Color });
     if (typeof theme?.spacing === "number" && theme.spacing > 0) {
       cardEl.setCssProps({ "--para-gap": `${theme.spacing}px` });
     }

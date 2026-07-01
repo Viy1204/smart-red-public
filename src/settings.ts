@@ -37,6 +37,10 @@ export const DEFAULT_SETTINGS: SmartRedSettings = {
     textColor: '',
     backgroundColor: '',
     accentColor: '',
+    boldColor: '',
+    h1Color: '',
+    h2Color: '',
+    h3Color: '',
     spacing: 24,
   },
   exportPixelRatio: 2,
@@ -48,6 +52,36 @@ export class SmartRedSettingTab extends PluginSettingTab {
   constructor(app: App, plugin: SmartRedPlugin) {
     super(app, plugin);
     this.plugin = plugin;
+  }
+
+  private colorSetting(
+    containerEl: HTMLElement,
+    name: string,
+    desc: string,
+    get: () => string,
+    set: (value: string) => void
+  ): void {
+    new Setting(containerEl)
+      .setName(name)
+      .setDesc(desc)
+      .addColorPicker((picker) =>
+        picker.setValue(get() || '#888888').onChange(async (value) => {
+          set(value);
+          await this.plugin.saveSettings();
+          this.plugin.refreshView();
+        })
+      )
+      .addExtraButton((button) =>
+        button
+          .setIcon('rotate-ccw')
+          .setTooltip('Reset to template default')
+          .onClick(async () => {
+            set('');
+            await this.plugin.saveSettings();
+            this.plugin.refreshView();
+            this.display();
+          })
+      );
   }
 
   display(): void {
@@ -277,6 +311,38 @@ export class SmartRedSettingTab extends PluginSettingTab {
             this.plugin.refreshView();
           });
       });
+
+    this.colorSetting(
+      containerEl,
+      'Bold color',
+      'Pick a color for **bold** text; reset to inherit the body color',
+      () => this.plugin.settings.theme.boldColor ?? '',
+      (value) => { this.plugin.settings.theme.boldColor = value; }
+    );
+
+    this.colorSetting(
+      containerEl,
+      'Heading 1 color',
+      '# H1 color; reset to the template default',
+      () => this.plugin.settings.theme.h1Color ?? '',
+      (value) => { this.plugin.settings.theme.h1Color = value; }
+    );
+
+    this.colorSetting(
+      containerEl,
+      'Heading 2 color',
+      '## H2 color; reset to the template default',
+      () => this.plugin.settings.theme.h2Color ?? '',
+      (value) => { this.plugin.settings.theme.h2Color = value; }
+    );
+
+    this.colorSetting(
+      containerEl,
+      'Heading 3 color',
+      '### H3 color; reset to the template default',
+      () => this.plugin.settings.theme.h3Color ?? '',
+      (value) => { this.plugin.settings.theme.h3Color = value; }
+    );
 
     new Setting(containerEl)
       .setName('Paragraph spacing')

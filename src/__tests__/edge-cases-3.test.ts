@@ -3,8 +3,8 @@ import { paginateMeasured } from "../pagination-engine";
 import { BlockType, type SemanticBlock } from "../types";
 import { cjkLines, makeContext, paragraph } from "./pagination-helpers";
 
-describe("last page balancing", () => {
-  test("pulls a whole trailing block back when the last page is too empty", () => {
+describe("greedy page fill (no last-page balancing)", () => {
+  test("packs each page to the brim; the last page may be short", () => {
     const listA: SemanticBlock = {
       type: BlockType.List,
       content: Array.from({ length: 7 }, (_, i) => `- 甲${i}`).join("\n"),
@@ -14,31 +14,29 @@ describe("last page balancing", () => {
       content: Array.from({ length: 2 }, (_, i) => `- 乙${i}`).join("\n"),
     };
     const paraC = paragraph(cjkLines(2, "丙"), { sourceBlockId: "c" });
-    const pages = paginateMeasured([listA, listB, paraC], makeContext(100));
+    const ctx = makeContext(100);
+    const pages = paginateMeasured([listA, listB, paraC], ctx);
 
     expect(pages).toHaveLength(2);
-    expect(pages[0].blocks).toEqual([listA]);
-    expect(pages[1].blocks.map((b) => b.content)).toEqual([listB.content, paraC.content]);
+    // Page 1 is filled completely; content is NOT pulled back to even the pages.
+    expect(ctx.measure(pages[0].blocks)).toBe(100);
+    expect(ctx.measure(pages[1].blocks)).toBeLessThan(ctx.measure(pages[0].blocks));
   });
 
-  test("never drains the previous page below its minimum fill", () => {
-    const listA: SemanticBlock = {
-      type: BlockType.List,
-      content: Array.from({ length: 4 }, (_, i) => `- 甲${i}`).join("\n"),
-    };
-    const listB: SemanticBlock = {
-      type: BlockType.List,
-      content: Array.from({ length: 5 }, (_, i) => `- 乙${i}`).join("\n"),
-    };
-    const paraC = paragraph(cjkLines(2, "丙"), { sourceBlockId: "c" });
-    const pages = paginateMeasured([listA, listB, paraC], makeContext(100));
+  test("splits a long paragraph to fill the page; remainder flows to a shorter last page", () => {
+    const content = cjkLines(12);
+    const ctx = makeContext(100);
+    const pages = paginateMeasured([paragraph(content, { sourceBlockId: "s" })], ctx);
 
     expect(pages).toHaveLength(2);
-    expect(pages[0].blocks).toEqual([listA, listB]);
-    expect(pages[1].blocks.map((b) => b.content)).toEqual([paraC.content]);
+    expect(ctx.measure(pages[0].blocks)).toBe(100);
+    // Remainder is not balanced back up; the last page stays short.
+    expect(ctx.measure(pages[1].blocks)).toBeLessThan(ctx.measure(pages[0].blocks));
+    expect(pages[1].blocks).toHaveLength(1);
+    expect(pages[0].blocks[0].content + pages[1].blocks[0].content).toBe(content);
   });
 
-  test("leaves a sufficiently full last page alone", () => {
+  test("packs images one per page when two will not fit together", () => {
     const imgA: SemanticBlock = { type: BlockType.Image, content: "a.png", metadata: { height: 90 } };
     const imgB: SemanticBlock = { type: BlockType.Image, content: "b.png", metadata: { height: 70 } };
     const pages = paginateMeasured([imgA, imgB], makeContext(100));
@@ -48,21 +46,7 @@ describe("last page balancing", () => {
     expect(pages[1].blocks).toEqual([imgB]);
   });
 
-  test("moves a same-source paragraph suffix line by line and merges it", () => {
-    const content = cjkLines(12);
-    const ctx = makeContext(100);
-    const pages = paginateMeasured([paragraph(content, { sourceBlockId: "s" })], ctx);
-
-    expect(pages).toHaveLength(2);
-    // Both pages keep a healthy fill after the suffix moves back.
-    expect(ctx.measure(pages[0].blocks)).toBeGreaterThanOrEqual(55);
-    expect(ctx.measure(pages[1].blocks)).toBeGreaterThanOrEqual(55);
-    // The moved suffix merged with the existing fragment into one paragraph.
-    expect(pages[1].blocks).toHaveLength(1);
-    expect(pages[0].blocks[0].content + pages[1].blocks[0].content).toBe(content);
-  });
-
-  test("does not move a suffix between unrelated paragraphs", () => {
+  test("does not merge unrelated paragraphs across a page break", () => {
     const big = paragraph(cjkLines(10, "甲"), { sourceBlockId: "big" });
     const small = paragraph(cjkLines(2, "乙"), { sourceBlockId: "small" });
     const pages = paginateMeasured([big, small], makeContext(100));
