@@ -2,9 +2,10 @@ import "./dom-setup";
 import { describe, test, expect } from "bun:test";
 import {
   TemplateRenderer,
-  headerReservePx,
+  computeHeaderReserve,
+  footerReservePx,
   HEADER_RESERVE_BASE_PX,
-  HEADER_RESERVE_AVATAR_PX,
+  FOOTER_CONTENT_RESERVE_PX,
 } from "../template-renderer";
 import { editorialTemplate } from "../templates/gallery";
 import { BlockType } from "../types";
@@ -26,16 +27,37 @@ function renderWithUser(user: Partial<TemplateUserInfo>) {
   return { shadow, card };
 }
 
-describe("headerReservePx", () => {
+describe("computeHeaderReserve", () => {
   test("0 when the header is hidden", () => {
-    expect(headerReservePx(false, false)).toBe(0);
-    expect(headerReservePx(false, true)).toBe(0);
+    expect(computeHeaderReserve({ showHeader: false, avatar: "x", nickname: "n" })).toBe(0);
   });
 
-  test("base reserve without an avatar, taller reserve with one", () => {
-    expect(headerReservePx(true, false)).toBe(HEADER_RESERVE_BASE_PX);
-    expect(headerReservePx(true, true)).toBe(HEADER_RESERVE_AVATAR_PX);
-    expect(HEADER_RESERVE_AVATAR_PX).toBeGreaterThan(HEADER_RESERVE_BASE_PX);
+  test("base reserve when no profile info is set (eyebrow only)", () => {
+    expect(computeHeaderReserve({})).toBe(HEADER_RESERVE_BASE_PX);
+  });
+
+  test("text-only profile reserves more than base (guards subtitle overlap)", () => {
+    const textOnly = computeHeaderReserve({ nickname: "Viy", handle: "viy", subtitle: "sss" });
+    expect(textOnly).toBeGreaterThan(HEADER_RESERVE_BASE_PX);
+  });
+
+  test("reserve grows with the chrome font size", () => {
+    const small = computeHeaderReserve({ avatar: "x", nickname: "Viy" }, 22);
+    const large = computeHeaderReserve({ avatar: "x", nickname: "Viy" }, 32);
+    expect(large).toBeGreaterThan(small);
+  });
+
+  test("adding a subtitle line grows the reserve", () => {
+    const two = computeHeaderReserve({ nickname: "Viy", handle: "viy" }, 22);
+    const three = computeHeaderReserve({ nickname: "Viy", handle: "viy", subtitle: "s" }, 22);
+    expect(three).toBeGreaterThan(two);
+  });
+});
+
+describe("footerReservePx", () => {
+  test("reserves when shown, nothing when hidden", () => {
+    expect(footerReservePx(true)).toBe(FOOTER_CONTENT_RESERVE_PX);
+    expect(footerReservePx(false)).toBe(0);
   });
 });
 
@@ -72,19 +94,27 @@ describe("profile header rendering", () => {
   });
 });
 
-describe("header reserve is published to the card element", () => {
-  test("taller reserve when an avatar is shown", () => {
-    const { card } = renderWithUser({ avatar: "app://abc/x.png", nickname: "Viy" });
-    expect(card.style.getPropertyValue("--header-reserve")).toBe(`${HEADER_RESERVE_AVATAR_PX}px`);
+describe("reserves are published to the card element", () => {
+  test("header reserve matches computeHeaderReserve for the shown profile", () => {
+    const user = { avatar: "app://abc/x.png", nickname: "Viy" };
+    const { card } = renderWithUser(user);
+    expect(card.style.getPropertyValue("--header-reserve")).toBe(`${computeHeaderReserve(user)}px`);
   });
 
-  test("base reserve without an avatar", () => {
-    const { card } = renderWithUser({ nickname: "Viy" });
+  test("base reserve when no profile info is set", () => {
+    const { card } = renderWithUser({});
     expect(card.style.getPropertyValue("--header-reserve")).toBe(`${HEADER_RESERVE_BASE_PX}px`);
   });
 
-  test("zero reserve when the header is hidden", () => {
+  test("zero header reserve when the header is hidden", () => {
     const { card } = renderWithUser({ showHeader: false });
     expect(card.style.getPropertyValue("--header-reserve")).toBe("0px");
+  });
+
+  test("footer reserve zeroes out when the footer is hidden", () => {
+    expect(renderWithUser({ showFooter: false }).card.style.getPropertyValue("--footer-reserve")).toBe("0px");
+    expect(renderWithUser({ nickname: "Viy" }).card.style.getPropertyValue("--footer-reserve")).toBe(
+      `${FOOTER_CONTENT_RESERVE_PX}px`
+    );
   });
 });

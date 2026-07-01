@@ -18,7 +18,7 @@ const BASE_STYLES = `
 :host { display: block; background: transparent; }
 * { box-sizing: border-box; }
 a { color: inherit; text-decoration-thickness: 2px; text-underline-offset: 5px; }
-strong { font-weight: 800; }
+strong { font-weight: 800; color: var(--strong-color, inherit); }
 em { font-style: italic; }
 del { opacity: 0.62; }
 code {
@@ -42,9 +42,9 @@ h1, h2, h3, h4, h5, h6 {
   text-wrap: balance;
   letter-spacing: 0;
 }
-h1 { font-size: var(--h1); line-height: 1.08; margin: 0 0 30px; }
-h2 { font-size: var(--h2); line-height: 1.14; margin: 0 0 24px; }
-h3 { font-size: var(--h3); line-height: 1.22; margin: 0 0 20px; }
+h1 { font-size: var(--h1); line-height: 1.08; margin: 0 0 30px; color: var(--h1-color, var(--heading)); }
+h2 { font-size: var(--h2); line-height: 1.14; margin: 0 0 24px; color: var(--h2-color, var(--heading)); }
+h3 { font-size: var(--h3); line-height: 1.22; margin: 0 0 20px; color: var(--h3-color, var(--heading)); }
 h4, h5, h6 { font-size: var(--h4); line-height: 1.28; margin: 0 0 18px; }
 p {
   margin: 0 0 var(--para-gap);
@@ -328,7 +328,7 @@ ${BASE_STYLES}
   height: 1440px;
   padding: ${config.padding}px;
   padding-top: calc(${config.padding}px + var(--header-reserve, ${HEADER_RESERVE_BASE_PX}px));
-  padding-bottom: ${config.padding + FOOTER_CONTENT_RESERVE_PX}px;
+  padding-bottom: calc(${config.padding}px + var(--footer-reserve, ${FOOTER_CONTENT_RESERVE_PX}px));
   box-sizing: border-box;
   position: relative;
   overflow: hidden;

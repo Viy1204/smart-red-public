@@ -227,7 +227,7 @@ export function renderChrome(
   const user = context?.user;
   const showHeader = user?.showHeader !== false;
   const showFooter = user?.showFooter !== false;
-  const footer = (user?.footer || "").trim() || (page.hasContinuation ? "continued" : "Smart RED");
+  const footer = (user?.footer || "").trim();
   return `
     ${showHeader ? `
     <div class="card-chrome top">

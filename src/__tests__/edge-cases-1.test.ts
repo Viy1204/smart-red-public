@@ -63,7 +63,9 @@ describe("degenerate inputs", () => {
     const joined = flattened.map((b) => b.content).join("\n");
     let cursor = 0;
     for (const block of blocks) {
-      const firstChunk = block.content.split("\n")[0];
+      // Prefix, not the whole first line: greedy fill may split a paragraph
+      // across pages, so its full first line need not survive contiguously.
+      const firstChunk = block.content.split("\n")[0].slice(0, 3);
       const idx = joined.indexOf(firstChunk, cursor);
       expect(idx).toBeGreaterThanOrEqual(0);
       cursor = idx;

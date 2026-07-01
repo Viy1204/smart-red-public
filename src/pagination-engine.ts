@@ -16,11 +16,6 @@ export interface PaginateContext {
   breakWidthFor(block: SemanticBlock): number;
 }
 
-// Last page below this fill ratio pulls content back from the previous page,
-// as long as the previous page keeps at least PREVIOUS_PAGE_MIN_FILL.
-const LAST_PAGE_BALANCE_THRESHOLD = 0.62;
-const LAST_PAGE_BALANCE_TARGET = 0.78;
-const PREVIOUS_PAGE_MIN_FILL = 0.55;
 
 export function isSameParagraphSource(a: SemanticBlock, b: SemanticBlock): boolean {
   if (a.type !== BlockType.Paragraph || b.type !== BlockType.Paragraph) return false;
@@ -313,120 +308,6 @@ function headingShouldBreakPage(
   return ctx.measure([...withHeading, probe]) > ctx.availableHeight;
 }
 
-function balanceLastPage(
-  pages: SemanticBlock[][],
-  ctx: PaginateContext,
-  explicitBreakAfter: Set<number>
-): void {
-  if (pages.length < 2) return;
-  // Never pull content across a break the author placed with `---`.
-  if (explicitBreakAfter.has(pages.length - 2)) return;
-  // A last page opening with its own section heading is a deliberate closing
-  // card; stealing unrelated content from the previous page to fatten it
-  // hurts more than the short page does.
-  if (pages[pages.length - 1][0]?.type === BlockType.Heading) return;
-  const availableHeight = ctx.availableHeight;
-  const last = pages[pages.length - 1];
-  const previous = pages[pages.length - 2];
-
-  if (ctx.measure(last) >= availableHeight * LAST_PAGE_BALANCE_THRESHOLD) return;
-
-  let iterations = 0;
-  while (
-    iterations < 12 &&
-    ctx.measure(last) < availableHeight * LAST_PAGE_BALANCE_TARGET
-  ) {
-    iterations++;
-    if (moveTrailingBlockToLastPage(previous, last, ctx)) continue;
-    if (moveParagraphSuffixToLastPage(previous, last, ctx)) continue;
-    break;
-  }
-
-  if (previous.length === 0) {
-    pages.splice(pages.length - 2, 1);
-  }
-}
-
-function prependToPage(block: SemanticBlock, page: SemanticBlock[]): SemanticBlock[] {
-  const [first, ...rest] = page;
-  if (first && isSameParagraphSource(block, first)) {
-    return [mergeParagraphFragments(block, first), ...rest];
-  }
-  return [block, ...page];
-}
-
-function moveTrailingBlockToLastPage(
-  previous: SemanticBlock[],
-  last: SemanticBlock[],
-  ctx: PaginateContext
-): boolean {
-  if (previous.length <= 1) return false;
-  const moving = previous[previous.length - 1];
-  if (
-    moving.type === BlockType.Heading ||
-    moving.type === BlockType.HorizontalRule ||
-    moving.type === BlockType.Spacer
-  ) {
-    return false;
-  }
-
-  const remaining = previous.slice(0, -1);
-  // Moving this block must not strand a heading at the previous page bottom.
-  if (remaining[remaining.length - 1]?.type === BlockType.Heading) return false;
-
-  const candidate = prependToPage(moving, last);
-  const remainingHeight = ctx.measure(remaining);
-  const candidateHeight = ctx.measure(candidate);
-  if (remainingHeight < ctx.availableHeight * PREVIOUS_PAGE_MIN_FILL) return false;
-  // Balancing evens pages out; never leave the previous page emptier than the last.
-  if (remainingHeight < candidateHeight) return false;
-  if (candidateHeight > ctx.availableHeight) return false;
-
-  previous.length = 0;
-  previous.push(...remaining);
-  last.length = 0;
-  last.push(...candidate);
-  return true;
-}
-
-function moveParagraphSuffixToLastPage(
-  previous: SemanticBlock[],
-  last: SemanticBlock[],
-  ctx: PaginateContext
-): boolean {
-  const trailing = previous[previous.length - 1];
-  if (!trailing || trailing.type !== BlockType.Paragraph) return false;
-  const leadingLast = last[0];
-  if (!leadingLast || !isSameParagraphSource(trailing, leadingLast)) return false;
-
-  const lines = paragraphLines(trailing, ctx);
-  if (lines.length <= 1) return false;
-
-  let best: { previous: SemanticBlock[]; last: SemanticBlock[] } | null = null;
-  for (let suffixLines = 1; suffixLines < lines.length; suffixLines++) {
-    const splitIndex = lines.length - suffixLines;
-    const kept = createParagraphFragment(trailing, lines, 0, splitIndex);
-    const moved = createParagraphFragment(trailing, lines, splitIndex, lines.length);
-    if (!kept.content.trim() || !moved.content.trim()) continue;
-
-    const previousCandidate = [...previous.slice(0, -1), kept];
-    const lastCandidate = prependToPage(moved, last);
-    const previousHeight = ctx.measure(previousCandidate);
-    const lastHeight = ctx.measure(lastCandidate);
-    if (previousHeight < ctx.availableHeight * PREVIOUS_PAGE_MIN_FILL) break;
-    if (previousHeight < lastHeight) break;
-    if (lastHeight > ctx.availableHeight) break;
-    best = { previous: previousCandidate, last: lastCandidate };
-  }
-
-  if (!best) return false;
-  previous.length = 0;
-  previous.push(...best.previous);
-  last.length = 0;
-  last.push(...best.last);
-  return true;
-}
-
 export function paginateMeasured(
   blocks: SemanticBlock[],
   ctx: PaginateContext
@@ -435,7 +316,6 @@ export function paginateMeasured(
 
   const queue = [...blocks];
   const pages: SemanticBlock[][] = [];
-  const explicitBreakAfter = new Set<number>();
   let current: SemanticBlock[] = [];
 
   const fits = (candidate: SemanticBlock[]) =>
@@ -453,9 +333,6 @@ export function paginateMeasured(
     if (block.type === BlockType.HorizontalRule) {
       // `---` means "start the next card here"; the rule itself is not rendered.
       closePage();
-      if (pages.length > 0) {
-        explicitBreakAfter.add(pages.length - 1);
-      }
       continue;
     }
 
@@ -512,8 +389,6 @@ export function paginateMeasured(
       page.pop();
     }
   }
-
-  balanceLastPage(pages, ctx, explicitBreakAfter);
 
   return pages.map((pageBlocks, index) => ({
     pageIndex: index,
