@@ -2,6 +2,7 @@ import './dom-setup';
 import { describe, test, expect, beforeEach } from 'bun:test';
 import { RedView, VIEW_TYPE_SMART_RED } from '../view';
 import { DEFAULT_SETTINGS } from '../settings';
+import { getTemplate } from '../templates/gallery';
 import { WorkspaceLeaf, App, TFile } from './obsidian-mock';
 import { BlockType } from '../types';
 
@@ -224,8 +225,9 @@ describe('RedView', () => {
   });
 
   test('available content height uses a tighter footer reserve', () => {
-    const cardPadding = 78;
-    const available = (view as any).getAvailableContentHeight(cardPadding);
+    const template = getTemplate('editorial');
+    const cardPadding = template.cardPadding;
+    const available = (view as any).getAvailableContentHeight(template);
     const oldConservativeAvailable = 1440 - (cardPadding + 36) - (cardPadding + 96) - 12;
     const withoutFooterAvailable = 1440 - (cardPadding + 36) - cardPadding;
 

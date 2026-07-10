@@ -1,13 +1,15 @@
 import { sanitizeHTMLToDom } from "obsidian";
 import { BlockType, type SemanticBlock } from "../types";
 import type { PaginationDecision } from "../pagination-engine";
-import type { TemplateRenderContext } from "./types";
+import type { CoverRenderContext, TemplateRenderContext } from "./types";
 
 export type TemplateId =
   | "editorial"
   | "monochrome"
   | "neo-grid"
   | "warm-zine"
+  | "warm-sun"
+  | "memo"
   | "noir-magazine"
   | "ivory-essay"
   | "red-ledger"
@@ -218,10 +220,16 @@ function renderProfileHeader(chrome: TemplateChrome, context?: TemplateRenderCon
   `;
 }
 
+export type ChromeTopRenderer = (
+  page: PaginationDecision,
+  context?: TemplateRenderContext
+) => string;
+
 export function renderChrome(
   page: PaginationDecision,
   chrome: TemplateChrome,
-  context?: TemplateRenderContext
+  context?: TemplateRenderContext,
+  renderTop?: ChromeTopRenderer
 ): string {
   const pageNo = String(page.pageIndex + 1).padStart(2, "0");
   const user = context?.user;
@@ -231,7 +239,7 @@ export function renderChrome(
   return `
     ${showHeader ? `
     <div class="card-chrome top">
-      ${renderProfileHeader(chrome, context)}
+      ${renderTop ? renderTop(page, context) : renderProfileHeader(chrome, context)}
     </div>
     ` : ""}
     ${showFooter ? `
@@ -249,9 +257,109 @@ export function layoutArticleCard(
   blocks: SemanticBlock[],
   page: PaginationDecision,
   chrome: TemplateChrome,
-  context?: TemplateRenderContext
+  context?: TemplateRenderContext,
+  renderTop?: ChromeTopRenderer
 ): void {
-  const html = `${renderChrome(page, chrome, context)}<main class="article-flow">${renderBlocks(blocks)}</main>`;
+  const html = `${renderChrome(page, chrome, context, renderTop)}<main class="article-flow">${renderBlocks(blocks)}</main>`;
+  el.empty();
+  el.appendChild(sanitizeHTMLToDom(html));
+}
+
+// --- Cover page (big-type title card) ---
+
+export const COVER_TITLE_MIN_PX = 84;
+export const COVER_TITLE_MAX_PX = 150;
+
+// CJK glyphs are one em wide; latin letters, digits and spaces roughly half.
+function effectiveTitleLength(title: string): number {
+  return Array.from(title).reduce(
+    (sum, ch) => sum + (/[⺀-鿿豈-﫿＀-￯]/.test(ch) ? 1 : 0.55),
+    0
+  );
+}
+
+// Formula-first size so headless environments (happy-dom measures 0) and the
+// pre-fit first paint both land near the final value; fitCoverTitle only
+// shrinks from here against real DOM metrics.
+export function coverTitleFontSize(title: string, availWidth = 920): number {
+  const len = Math.max(1, effectiveTitleLength(title));
+  // Budget up to 3 wrapped lines; per-line chars drive the size so the value
+  // is monotonically non-increasing in title length (no jumps at row breaks).
+  // The 0.9 factor leaves side breathing room instead of edge-to-edge type.
+  const perLine = Math.ceil(len / 3);
+  return Math.max(
+    COVER_TITLE_MIN_PX,
+    Math.min(COVER_TITLE_MAX_PX, Math.floor((availWidth / perLine) * 0.9))
+  );
+}
+
+export function fitCoverTitle(
+  titleEl: HTMLElement,
+  boxEl: HTMLElement,
+  minPx = COVER_TITLE_MIN_PX,
+  maxPx = COVER_TITLE_MAX_PX
+): void {
+  const boxWidth = boxEl.clientWidth;
+  const boxHeight = boxEl.clientHeight;
+  if (!boxWidth || !boxHeight) return;
+
+  // Shrink-only: the formula seed is the ceiling, so the fit never inflates
+  // the title to fill the whole box. Height cap keeps whitespace around it.
+  const seeded = parseFloat(titleEl.style.fontSize);
+  const ceiling = Math.min(maxPx, Number.isFinite(seeded) && seeded > 0 ? seeded : maxPx);
+  const maxTitleHeight = boxHeight * 0.62;
+  const fits = (fontSize: number): boolean => {
+    titleEl.style.fontSize = `${fontSize}px`;
+    return titleEl.scrollHeight <= maxTitleHeight && titleEl.scrollWidth <= boxWidth;
+  };
+
+  if (fits(ceiling)) return;
+  if (!fits(minPx)) return; // keep the floor; line-clamp guards the overflow
+  let lo = minPx;
+  let hi = ceiling;
+  while (hi - lo > 2) {
+    const mid = Math.round((lo + hi) / 2);
+    if (fits(mid)) {
+      lo = mid;
+    } else {
+      hi = mid;
+    }
+  }
+  titleEl.style.fontSize = `${lo}px`;
+}
+
+function renderCoverProfile(context?: TemplateRenderContext): string {
+  const user = context?.user;
+  const avatar = (user?.avatar || "").trim();
+  const nickname = (user?.nickname || "").trim();
+  const handle = (user?.handle || "").trim().replace(/^@+/, "");
+  if (!avatar && !nickname && !handle) return "";
+  const roundAvatar = user?.roundAvatar !== false;
+  const badge = user?.verifiedBadge === true && nickname ? VERIFIED_BADGE_SVG : "";
+  return `
+    <div class="cover-profile">
+      ${avatar ? `<img class="cover-avatar ${roundAvatar ? "is-round" : ""}" src="${escapeHtml(avatar)}" alt="${escapeHtml(nickname || "avatar")}" />` : ""}
+      <span class="cover-profile-copy">
+        ${nickname ? `<span class="cover-profile-name">${escapeHtml(nickname)}${badge}</span>` : ""}
+        ${handle ? `<span class="cover-profile-handle">@${escapeHtml(handle)}</span>` : ""}
+      </span>
+    </div>
+  `;
+}
+
+export function layoutTitleCover(el: HTMLElement, ctx: CoverRenderContext): void {
+  const title = (ctx.title || "").trim() || "Smart RED";
+  const fontSize = coverTitleFontSize(title);
+  const profile = ctx.showAuthor !== false ? renderCoverProfile(ctx) : "";
+  const html = `
+    <div class="cover-flow">
+      <div class="cover-title-box">
+        <h1 class="cover-title" style="font-size: ${fontSize}px">${escapeHtml(title)}</h1>
+        <div class="cover-underline"></div>
+      </div>
+      ${profile}
+    </div>
+  `;
   el.empty();
   el.appendChild(sanitizeHTMLToDom(html));
 }

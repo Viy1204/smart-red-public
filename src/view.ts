@@ -12,13 +12,13 @@ import {
   computeHeaderReserve,
   footerReservePx,
 } from './template-renderer';
-import { ExportPipeline, pageFileName, sanitizeFileName } from './export-pipeline';
+import { ExportPipeline, coverFileName, pageFileName, sanitizeFileName } from './export-pipeline';
 import { copyPngBlobToClipboard } from './clipboard';
 import { getTemplate, templates } from './templates/gallery';
 import { stripInlineMarkdown } from './templates/utils';
 import { buildRenderSegments } from './section-splitter';
 import type { SmartRedSettings } from './settings';
-import type { TemplateRenderContext } from './templates/types';
+import type { CoverRenderContext, Template, TemplateRenderContext } from './templates/types';
 import { BlockType, type SemanticBlock } from './types';
 
 export const VIEW_TYPE_SMART_RED = 'smart-red-preview';
@@ -46,18 +46,28 @@ export function absolutePathToFileUrl(raw: string): string | null {
   return winAbs ? `file:///${encoded}` : `file://${encoded}`;
 }
 
+// probe lists the aliases of the intended typeface (macOS/Windows names);
+// availability means any alias is installed, so e.g. 楷体 counts as available
+// on Windows via "KaiTi" even though "Kaiti SC" is macOS-only.
 const FONT_OPTIONS = [
-  { label: 'Default', value: '', primary: '' },
-  { label: '系统黑体', value: '"PingFang SC", "Microsoft YaHei", "Noto Sans CJK SC", sans-serif', primary: 'PingFang SC' },
-  { label: '苹方雅黑', value: '"PingFang SC", "Microsoft YaHei", -apple-system, BlinkMacSystemFont, sans-serif', primary: 'PingFang SC' },
-  { label: '思源黑体', value: '"Source Han Sans SC", "Noto Sans CJK SC", "Microsoft YaHei", sans-serif', primary: 'Source Han Sans SC' },
-  { label: '思源宋体', value: '"Source Han Serif SC", "Noto Serif CJK SC", "Songti SC", serif', primary: 'Source Han Serif SC' },
-  { label: '霞鹜文楷', value: '"LXGW WenKai", "LXGW WenKai Screen", "Kaiti SC", "KaiTi", serif', primary: 'LXGW WenKai' },
-  { label: 'HarmonyOS', value: '"HarmonyOS Sans SC", "HarmonyOS Sans", "PingFang SC", sans-serif', primary: 'HarmonyOS Sans SC' },
-  { label: '阿里普惠', value: '"Alibaba PuHuiTi", "Alibaba PuHuiTi 2.0", "Microsoft YaHei", sans-serif', primary: 'Alibaba PuHuiTi' },
-  { label: '宋体仿宋', value: '"Songti SC", "STSong", "FangSong", "FangSong_GB2312", serif', primary: 'Songti SC' },
-  { label: '等宽', value: '"SF Mono", Menlo, Monaco, Consolas, "Noto Sans Mono CJK SC", monospace', primary: 'SF Mono' },
+  { label: 'Default', value: '', probe: [] as string[] },
+  { label: '系统黑体', value: '"PingFang SC", "Microsoft YaHei", "Noto Sans CJK SC", sans-serif', probe: ['PingFang SC', 'Microsoft YaHei', 'Noto Sans CJK SC'] },
+  { label: '苹方雅黑', value: '"PingFang SC", "Microsoft YaHei", -apple-system, BlinkMacSystemFont, sans-serif', probe: ['PingFang SC', 'Microsoft YaHei'] },
+  { label: '思源黑体', value: '"Source Han Sans SC", "Noto Sans CJK SC", "Microsoft YaHei", sans-serif', probe: ['Source Han Sans SC', 'Noto Sans CJK SC'] },
+  { label: '思源宋体', value: '"Source Han Serif SC", "Noto Serif CJK SC", "Songti SC", serif', probe: ['Source Han Serif SC', 'Noto Serif CJK SC'] },
+  { label: '霞鹜文楷', value: '"LXGW WenKai", "LXGW WenKai Screen", "Kaiti SC", "KaiTi", serif', probe: ['LXGW WenKai', 'LXGW WenKai Screen'] },
+  { label: '楷体', value: '"Kaiti SC", "STKaiti", "KaiTi", "楷体", serif', probe: ['Kaiti SC', 'STKaiti', 'KaiTi'] },
+  { label: '圆体', value: '"Yuanti SC", "YouYuan", "幼圆", "Yuanti", sans-serif', probe: ['Yuanti SC', 'YouYuan', '幼圆'] },
+  { label: '隶书', value: '"Libian SC", "Baoli SC", "LiSu", "隶书", serif', probe: ['Libian SC', 'Baoli SC', 'LiSu', '隶书'] },
+  { label: 'HarmonyOS', value: '"HarmonyOS Sans SC", "HarmonyOS Sans", "PingFang SC", sans-serif', probe: ['HarmonyOS Sans SC', 'HarmonyOS Sans'] },
+  { label: '阿里普惠', value: '"Alibaba PuHuiTi", "Alibaba PuHuiTi 2.0", "Microsoft YaHei", sans-serif', probe: ['Alibaba PuHuiTi', 'Alibaba PuHuiTi 2.0'] },
+  { label: '宋体仿宋', value: '"Songti SC", "STSong", "FangSong", "FangSong_GB2312", serif', probe: ['Songti SC', 'STSong', 'FangSong', 'SimSun'] },
+  { label: '等宽', value: '"SF Mono", Menlo, Monaco, Consolas, "Noto Sans Mono CJK SC", monospace', probe: ['SF Mono', 'Menlo', 'Consolas'] },
 ];
+
+type PageModel =
+  | { kind: 'cover' }
+  | { kind: 'content'; decision: PaginationDecision };
 
 export class RedView extends ItemView {
   private pluginSettings: SmartRedSettings;
@@ -73,6 +83,7 @@ export class RedView extends ItemView {
   private previewContainer: HTMLElement | null = null;
   private navIndicator: HTMLElement | null = null;
   private lockBtn: HTMLElement | null = null;
+  private coverBtn: HTMLElement | null = null;
   private copyBtn: HTMLButtonElement | null = null;
   private pngBtn: HTMLButtonElement | null = null;
   private zipBtn: HTMLButtonElement | null = null;
@@ -136,6 +147,14 @@ export class RedView extends ItemView {
       attr: { title: 'Lock preview (edits will not refresh)' },
     });
     this.lockBtn.addEventListener('click', () => this.toggleLock());
+
+    this.coverBtn = navGroup.createEl('button', {
+      cls: 'smart-red-tool-btn smart-red-cover-btn',
+      text: 'Cover',
+      attr: { title: 'Add a title cover page' },
+    });
+    this.coverBtn.addEventListener('click', () => this.toggleCover());
+    this.updateCoverButton();
 
     const prevBtn = navGroup.createEl('button', {
       cls: 'smart-red-tool-btn',
@@ -305,6 +324,7 @@ export class RedView extends ItemView {
       this.templateSelect.value = this.pluginSettings.template;
     }
     this.updateTypographyControls();
+    this.updateCoverButton();
     this.lastRenderKey = null;
     if (!this.isLocked) {
       this.refreshPreview();
@@ -337,6 +357,33 @@ export class RedView extends ItemView {
     };
   }
 
+  private getCoverContext(): CoverRenderContext {
+    return {
+      ...this.getRenderContext(),
+      title: this.documentTitle,
+      showAuthor: this.pluginSettings.cover.showAuthor,
+    };
+  }
+
+  // The cover is presentation-only page composition: it has no blocks and
+  // never enters paginateMeasured, so content decisions keep their pageIndex
+  // and footer numbering untouched.
+  private getPages(): PageModel[] {
+    if (this.decisions.length === 0) return [];
+    const pages: PageModel[] = this.decisions.map((decision) => ({
+      kind: 'content' as const,
+      decision,
+    }));
+    if (this.pluginSettings.cover.enabled) {
+      pages.unshift({ kind: 'cover' });
+    }
+    return pages;
+  }
+
+  private currentPage(): PageModel | null {
+    return this.getPages()[this.currentPageIndex] ?? null;
+  }
+
   private clampFontSize(fontSize: number): number {
     if (!Number.isFinite(fontSize)) return 31;
     return Math.min(MAX_FONT_SIZE, Math.max(MIN_FONT_SIZE, Math.round(fontSize)));
@@ -363,9 +410,12 @@ export class RedView extends ItemView {
   private updateFontAvailability(): void {
     if (!this.fontFamilySelect) return;
     const selected = FONT_OPTIONS.find((font) => font.value === this.fontFamilySelect!.value);
-    const primary = selected?.primary || '';
+    const probe = selected?.probe ?? [];
     const fontApi = document.fonts as FontFaceSet | undefined;
-    const available = !primary || !fontApi?.check || fontApi.check(`16px "${primary}"`);
+    const available =
+      probe.length === 0 ||
+      !fontApi?.check ||
+      probe.some((name) => fontApi.check(`16px "${name}"`));
     this.fontFamilySelect.toggleClass('is-fallback', !available);
     this.fontFamilySelect.setAttribute(
       'title',
@@ -417,6 +467,30 @@ export class RedView extends ItemView {
     this.updateTypographyControls();
     await this.persistSettings();
     this.refreshPreview();
+  }
+
+  private async toggleCover(): Promise<void> {
+    this.pluginSettings = {
+      ...this.pluginSettings,
+      cover: {
+        ...this.pluginSettings.cover,
+        enabled: !this.pluginSettings.cover.enabled,
+      },
+    };
+    this.updateCoverButton();
+    this.lastRenderKey = null;
+    await this.persistSettings();
+    this.refreshPreview();
+  }
+
+  private updateCoverButton(): void {
+    if (!this.coverBtn) return;
+    const enabled = this.pluginSettings.cover.enabled;
+    this.coverBtn.toggleClass('is-active', enabled);
+    this.coverBtn.setAttribute(
+      'title',
+      enabled ? 'Cover page enabled' : 'Add a title cover page'
+    );
   }
 
   private toggleLock(): void {
@@ -474,7 +548,7 @@ export class RedView extends ItemView {
   }
 
   private nextPage(): void {
-    if (this.currentPageIndex < this.decisions.length - 1) {
+    if (this.currentPageIndex < this.getPages().length - 1) {
       this.currentPageIndex++;
       this.renderCurrentPage();
     }
@@ -533,7 +607,7 @@ export class RedView extends ItemView {
 
       const segments = buildRenderSegments(blocks);
       this.decisions = [];
-      const availableHeight = this.getAvailableContentHeight(template.cardPadding);
+      const availableHeight = this.getAvailableContentHeight(template);
       const measurer = this.createPageMeasurer();
       try {
         for (const segment of segments) {
@@ -557,7 +631,7 @@ export class RedView extends ItemView {
       }
       this.currentPageIndex = Math.min(
         this.currentPageIndex,
-        Math.max(0, this.decisions.length - 1)
+        Math.max(0, this.getPages().length - 1)
       );
       if (seq !== this.renderSeq) return;
 
@@ -584,11 +658,14 @@ export class RedView extends ItemView {
     return dims ? resolved : '';
   }
 
-  private getAvailableContentHeight(cardPadding: number): number {
+  private getAvailableContentHeight(template: Template): number {
+    const cardPadding = template.cardPadding;
     const user = { ...this.pluginSettings.user, avatar: this.resolvedAvatar };
     const topSafe = Math.max(0, this.pluginSettings.topSafeArea ?? 0);
     const topPadding =
-      cardPadding + topSafe + computeHeaderReserve(user, this.pluginSettings.chromeFontSize);
+      cardPadding +
+      topSafe +
+      computeHeaderReserve(user, this.pluginSettings.chromeFontSize, template.headerReserveMinPx ?? 0);
     const bottomPadding = cardPadding + footerReservePx(user.showFooter !== false);
     return Math.max(0, CARD_HEIGHT - topPadding - bottomPadding - PAGE_SAFETY_PX);
   }
@@ -841,7 +918,9 @@ export class RedView extends ItemView {
           const headingLineHeight = fontSize * headingScale * (level <= 2 ? 1.14 : 1.22);
           const headingChars = Math.max(6, Math.floor(charsPerLine / headingScale));
           measuredLines = this.estimateLines(block.content, headingChars);
-          height = Math.ceil(measuredLines * headingLineHeight + (level <= 2 ? 24 : 18));
+          // Bottom margin plus the top margin that survives collapsing with
+          // the previous paragraph's gap (see BASE_STYLES heading margins).
+          height = Math.ceil(measuredLines * headingLineHeight + (level <= 2 ? 50 : 32));
           break;
         }
         case BlockType.CodeBlock: {
@@ -966,7 +1045,8 @@ export class RedView extends ItemView {
     this.previewContainer.empty();
     this.currentPageEl = null;
 
-    if (this.decisions.length === 0) {
+    const page = this.currentPage();
+    if (!page) {
       this.emptyStateEl = this.previewContainer.createEl('div', {
         cls: 'smart-red-empty',
         text: 'No content to preview',
@@ -975,16 +1055,18 @@ export class RedView extends ItemView {
       return;
     }
 
-    const decision = this.decisions[this.currentPageIndex];
     const template = getTemplate(this.pluginSettings.template);
-    const pageBlocks = normalizeParagraphFragments(decision.blocks);
-
     const wrapper = this.previewContainer.createEl('div', {
       cls: 'smart-red-card-wrapper',
     });
     this.currentPageEl = wrapper;
 
-    this.renderer.renderCard(wrapper, pageBlocks, decision, template, this.getRenderContext());
+    if (page.kind === 'cover') {
+      this.renderer.renderCoverCard(wrapper, template, this.getCoverContext());
+    } else {
+      const pageBlocks = normalizeParagraphFragments(page.decision.blocks);
+      this.renderer.renderCard(wrapper, pageBlocks, page.decision, template, this.getRenderContext());
+    }
     this.updatePreviewScale();
     this.updateNavIndicator();
   }
@@ -1062,16 +1144,33 @@ export class RedView extends ItemView {
     }
   }
 
+  private createCurrentPageExportContainer(
+    page: PageModel,
+    template = getTemplate(this.pluginSettings.template)
+  ): HTMLElement {
+    if (page.kind === 'cover') {
+      const exportRoot = this.createExportRoot('smart-red-export-root', template.backgroundColor);
+      this.renderer.renderExportCoverCard(exportRoot, template, this.getCoverContext());
+      return exportRoot;
+    }
+    return this.createExportContainer(page.decision, template);
+  }
+
+  private currentPageFileName(page: PageModel): string {
+    return page.kind === 'cover'
+      ? coverFileName(this.documentTitle)
+      : pageFileName(page.decision.pageIndex, this.documentTitle);
+  }
+
   private async copyCurrentPage(): Promise<void> {
     await this.withButtonState(this.copyBtn, 'Copying', async () => {
-      if (this.decisions.length === 0) {
+      const page = this.currentPage();
+      if (!page) {
         new Notice('No Smart RED page to copy');
         return;
       }
 
-      const template = getTemplate(this.pluginSettings.template);
-      const decision = this.decisions[this.currentPageIndex];
-      const exportRoot = this.createExportContainer(decision, template);
+      const exportRoot = this.createCurrentPageExportContainer(page);
 
       try {
         const blob = await this.exporter.renderToBlob(exportRoot, this.currentPageIndex);
@@ -1088,18 +1187,17 @@ export class RedView extends ItemView {
 
   private async exportCurrentPage(): Promise<void> {
     await this.withButtonState(this.pngBtn, 'Exporting', async () => {
-      if (this.decisions.length === 0) {
+      const page = this.currentPage();
+      if (!page) {
         new Notice('No Smart RED page to export');
         return;
       }
 
-      const template = getTemplate(this.pluginSettings.template);
-      const decision = this.decisions[this.currentPageIndex];
-      const exportRoot = this.createExportContainer(decision, template);
+      const exportRoot = this.createCurrentPageExportContainer(page);
 
       try {
         const blob = await this.exporter.renderToBlob(exportRoot, this.currentPageIndex);
-        this.downloadBlob(blob, pageFileName(this.currentPageIndex, this.documentTitle));
+        this.downloadBlob(blob, this.currentPageFileName(page));
         new Notice('Smart RED PNG exported');
       } catch (err) {
         console.error('Smart RED: export failed', err);
@@ -1112,29 +1210,35 @@ export class RedView extends ItemView {
 
   private async exportAllPages(): Promise<void> {
     await this.withButtonState(this.zipBtn, 'Exporting', async () => {
-      if (this.decisions.length === 0) {
+      const pages = this.getPages();
+      if (pages.length === 0) {
         new Notice('No Smart RED pages to export');
         return;
       }
 
       const template = getTemplate(this.pluginSettings.template);
       const exportRoot = this.createExportRoot('smart-red-export-batch', template.backgroundColor);
+      const hasCover = pages[0]?.kind === 'cover';
 
       try {
         const containers: HTMLElement[] = [];
-        for (const decision of this.decisions) {
+        for (const page of pages) {
           const wrapper = document.createElement('div');
           wrapper.className = 'smart-red-export-card';
           wrapper.setCssStyles({
             backgroundColor: this.pluginSettings.theme.backgroundColor || template.backgroundColor,
           });
           exportRoot.appendChild(wrapper);
-          const pageBlocks = normalizeParagraphFragments(decision.blocks);
-          this.renderer.renderExportCard(wrapper, pageBlocks, decision, template, this.getRenderContext());
+          if (page.kind === 'cover') {
+            this.renderer.renderExportCoverCard(wrapper, template, this.getCoverContext());
+          } else {
+            const pageBlocks = normalizeParagraphFragments(page.decision.blocks);
+            this.renderer.renderExportCard(wrapper, pageBlocks, page.decision, template, this.getRenderContext());
+          }
           containers.push(wrapper);
         }
 
-        const blob = await this.exporter.exportAllPages(containers, this.documentTitle);
+        const blob = await this.exporter.exportAllPages(containers, this.documentTitle, hasCover);
         this.downloadBlob(blob, `${sanitizeFileName(this.documentTitle)}.zip`);
         new Notice('Smart RED ZIP exported');
       } catch (err) {
@@ -1159,9 +1263,13 @@ export class RedView extends ItemView {
 
   private updateNavIndicator(): void {
     if (this.navIndicator) {
-      const total = this.decisions.length;
+      const total = this.getPages().length;
       const current = total > 0 ? this.currentPageIndex + 1 : 0;
       this.navIndicator.textContent = `${current}/${total}`;
+      this.navIndicator.setAttribute(
+        'title',
+        this.currentPage()?.kind === 'cover' ? 'Cover page' : ''
+      );
     }
   }
 

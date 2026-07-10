@@ -5,6 +5,9 @@ node_modules
 main.js
 *.js.map
 
+# dev visual harness output
+scripts/preview-cards.html
+
 # caches
 .DS_Store
 *.log

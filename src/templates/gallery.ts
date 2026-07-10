@@ -1,7 +1,12 @@
 import type { SemanticBlock } from "../types";
 import type { PaginationDecision } from "../pagination-engine";
-import type { Template, TemplateRenderContext } from "./types";
-import { layoutArticleCard, type TemplateId } from "./utils";
+import type { CoverRenderContext, Template, TemplateRenderContext } from "./types";
+import {
+  layoutArticleCard,
+  layoutTitleCover,
+  type ChromeTopRenderer,
+  type TemplateId,
+} from "./utils";
 import { HEADER_RESERVE_BASE_PX, FOOTER_CONTENT_RESERVE_PX } from "../template-renderer";
 
 const SYSTEM_SANS = `-apple-system, BlinkMacSystemFont, "SF Pro Display", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif`;
@@ -42,10 +47,10 @@ h1, h2, h3, h4, h5, h6 {
   text-wrap: balance;
   letter-spacing: 0;
 }
-h1 { font-size: var(--h1); line-height: 1.08; margin: 0 0 30px; color: var(--h1-color, var(--heading)); }
-h2 { font-size: var(--h2); line-height: 1.14; margin: 0 0 24px; color: var(--h2-color, var(--heading)); }
-h3 { font-size: var(--h3); line-height: 1.22; margin: 0 0 20px; color: var(--h3-color, var(--heading)); }
-h4, h5, h6 { font-size: var(--h4); line-height: 1.28; margin: 0 0 18px; }
+h1 { font-size: var(--h1); line-height: 1.08; margin: 52px 0 30px; color: var(--h1-color, var(--heading)); }
+h2 { font-size: var(--h2); line-height: 1.14; margin: 46px 0 24px; color: var(--h2-color, var(--heading)); }
+h3 { font-size: var(--h3); line-height: 1.22; margin: 36px 0 20px; color: var(--h3-color, var(--heading)); }
+h4, h5, h6 { font-size: var(--h4); line-height: 1.28; margin: 30px 0 18px; }
 p {
   margin: 0 0 var(--para-gap);
   color: var(--body);
@@ -301,6 +306,76 @@ th {
   font-size: calc(var(--chrome-size, 22px) - 2px);
   text-transform: none;
 }
+.cover-flow {
+  position: relative;
+  z-index: 2;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+.cover-title-box {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding-bottom: 8%;
+}
+.cover-title {
+  margin: 0;
+  font-family: var(--display);
+  font-weight: 900;
+  color: var(--h1-color, var(--heading));
+  line-height: 1.26;
+  letter-spacing: 0.02em;
+  text-wrap: balance;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 4;
+}
+.cover-underline {
+  width: 220px;
+  height: 20px;
+  margin-top: 44px;
+  background: var(--accent);
+}
+.cover-profile {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+}
+.cover-avatar {
+  width: 104px;
+  height: 104px;
+  object-fit: cover;
+  border: 1px solid var(--hairline);
+  background: var(--image-bg);
+  border-radius: 22px;
+}
+.cover-avatar.is-round { border-radius: 50%; }
+.cover-profile-copy {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+}
+.cover-profile-name {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 34px;
+  font-weight: 800;
+  color: var(--heading);
+}
+.cover-profile-name .verified-badge {
+  width: 36px;
+  height: 36px;
+}
+.cover-profile-handle {
+  font-size: 26px;
+  color: var(--chrome);
+}
 `;
 
 function makeTemplate(config: {
@@ -314,6 +389,8 @@ function makeTemplate(config: {
   chrome: { eyebrow: string; volume: string };
   vars: string;
   extras?: string;
+  chromeTop?: ChromeTopRenderer;
+  headerReserveMinPx?: number;
 }): Template {
   const styles = `
 ${BASE_STYLES}
@@ -356,13 +433,17 @@ ${config.extras || ""}
     lineHeightRatio: config.lineHeightRatio,
     backgroundColor: config.backgroundColor,
     styles,
+    headerReserveMinPx: config.headerReserveMinPx,
     layout(
       el: HTMLElement,
       blocks: SemanticBlock[],
       page: PaginationDecision,
       context?: TemplateRenderContext
     ): void {
-      layoutArticleCard(el, blocks, page, config.chrome, context);
+      layoutArticleCard(el, blocks, page, config.chrome, context, config.chromeTop);
+    },
+    layoutCover(el: HTMLElement, context: CoverRenderContext): void {
+      layoutTitleCover(el, context);
     },
   };
 }
@@ -1482,11 +1563,166 @@ export const wiredTemplate = makeTemplate({
 `,
 });
 
+// 暖阳文艺 — ported from note-to-red's "warm" theme: cream paper with a
+// saddle-brown / copper palette and a CJK serif voice.
+export const warmSunTemplate = makeTemplate({
+  name: "warm-sun",
+  displayName: "暖阳文艺",
+  className: "sr-warm-sun-card",
+  padding: 78,
+  baseFontSize: 31,
+  lineHeightRatio: 1.75,
+  backgroundColor: "#FFFAF5",
+  chrome: { eyebrow: "暖阳手记", volume: "Smart RED" },
+  vars: `
+    --paper: #fffaf5;
+    --heading: #8b4513;
+    --body: #5a4a42;
+    --muted: #b87333;
+    --accent: #b87333;
+    --accent-soft: #deb887;
+    --strong-color: #d2691e;
+    --rule: #deb887;
+    --hairline: #ecd9c3;
+    --chrome: #a9763f;
+    --quote: #b87333;
+    --quote-bg: #fdf3e7;
+    --inline-code-bg: #fff6e9;
+    --code-bg: #fff6e9;
+    --code: #8b4513;
+    --table-head: #f7e8d6;
+    --image-bg: #f7ead9;
+    --display: var(--serif);
+    --body-font: var(--serif);
+    --caption: var(--serif);
+    --h1: 66px;
+    --h2: 50px;
+    --h3: 40px;
+    --h4: 34px;
+    --quote-size: 35px;
+    --para-gap: 24px;
+  `,
+  extras: `
+.sr-warm-sun-card em { color: #b87333; font-style: italic; }
+.sr-warm-sun-card h1, .sr-warm-sun-card h2, .sr-warm-sun-card h3 { font-weight: 600; }
+.sr-warm-sun-card h2::after {
+  content: "";
+  display: block;
+  width: 72px;
+  border-top: 4px solid var(--accent-soft);
+  margin-top: 18px;
+}
+.sr-warm-sun-card blockquote {
+  border: 0;
+  border-left: 8px solid #deb887;
+  background: linear-gradient(90deg, rgba(222,184,135,0.18), rgba(222,184,135,0.02));
+  font-style: italic;
+}
+.sr-warm-sun-card .code-block { border-radius: 8px; overflow: hidden; border-color: rgba(184,115,51,0.5); }
+.sr-warm-sun-card .code-block figcaption { border-color: rgba(184,115,51,0.3); }
+.sr-warm-sun-card a { color: #d2691e; }
+`,
+});
+
+// 备忘录 — iOS Notes skeuomorph in its light colorway (the dark original reads
+// poorly in Xiaohongshu's two-column feed). The nav bar replaces the profile
+// header via chromeTop, so headerReserveMinPx must cover its height.
+const MEMO_NAV_SVG = {
+  back: `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14.5 4.5 L7.5 12 L14.5 19.5" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>`,
+  share: `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3.2v11" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/><path d="M8.4 6.6 L12 3 L15.6 6.6" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/><path d="M8 10.4 H6.2 V20.4 H17.8 V10.4 H16" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/></svg>`,
+  more: `<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9.6" fill="none" stroke="currentColor" stroke-width="1.9"/><circle cx="7.6" cy="12" r="1.35" fill="currentColor"/><circle cx="12" cy="12" r="1.35" fill="currentColor"/><circle cx="16.4" cy="12" r="1.35" fill="currentColor"/></svg>`,
+};
+
+const memoChromeTop: ChromeTopRenderer = () => `
+  <span class="memo-nav-back">${MEMO_NAV_SVG.back}<span>笔记</span></span>
+  <span class="memo-nav-actions">${MEMO_NAV_SVG.share}${MEMO_NAV_SVG.more}</span>
+`;
+
+// Colorway = notes chrome × warm theme, matching how the reference posts pair
+// them: cream paper, golden nav, a brown ladder for heading levels and the
+// warm theme's orange bold (#d2691e) / copper italic (#b87333).
+export const memoTemplate = makeTemplate({
+  name: "memo",
+  displayName: "备忘录",
+  className: "sr-memo-card",
+  padding: 72,
+  baseFontSize: 31,
+  lineHeightRatio: 1.7,
+  backgroundColor: "#FCF4E5",
+  chrome: { eyebrow: "备忘录", volume: "Smart RED" },
+  chromeTop: memoChromeTop,
+  headerReserveMinPx: 110,
+  vars: `
+    --paper: #fcf4e5;
+    --heading: #8b4513;
+    --h1-color: #703a12;
+    --h2-color: #a0522d;
+    --h3-color: #b86a28;
+    --body: #3a342c;
+    --muted: #a08e76;
+    --accent: #d2691e;
+    --accent-soft: #f8c744;
+    --strong-color: #d2691e;
+    --rule: #ecdfc8;
+    --hairline: #eadfca;
+    --chrome: #e2a500;
+    --quote: #8a6a4a;
+    --quote-bg: #f8eed9;
+    --inline-code-bg: #f8eed9;
+    --code-bg: #f6ecd8;
+    --code: #5a4a42;
+    --table-head: #f6ecd8;
+    --image-bg: #f3e8d2;
+    --display: var(--sans);
+    --body-font: var(--sans);
+    --caption: var(--sans);
+    --h1: 68px;
+    --h2: 50px;
+    --h3: 40px;
+    --h4: 34px;
+    --quote-size: 34px;
+    --para-gap: 24px;
+  `,
+  extras: `
+.sr-memo-card .card-chrome.top {
+  border-bottom: none;
+  text-transform: none;
+  color: var(--chrome);
+  font-size: 40px;
+}
+.sr-memo-card .memo-nav-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 500;
+}
+.sr-memo-card .memo-nav-back svg { width: 42px; height: 42px; }
+.sr-memo-card .memo-nav-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 34px;
+}
+.sr-memo-card .memo-nav-actions svg { width: 46px; height: 46px; }
+.sr-memo-card h1, .sr-memo-card h2 { font-weight: 800; letter-spacing: -0.5px; }
+.sr-memo-card h3 { font-weight: 700; }
+.sr-memo-card em { color: #b87333; }
+.sr-memo-card blockquote {
+  border: 0;
+  border-left: 6px solid var(--accent-soft);
+  border-radius: 4px;
+}
+.sr-memo-card ul li::before { background: var(--accent-soft); }
+.sr-memo-card .code-block { border-radius: 10px; overflow: hidden; }
+`,
+});
+
 export const templates = [
   editorialTemplate,
   monochromeTemplate,
   neoGridTemplate,
   warmZineTemplate,
+  warmSunTemplate,
+  memoTemplate,
   noirMagazineTemplate,
   ivoryEssayTemplate,
   redLedgerTemplate,
@@ -1509,6 +1745,8 @@ export const templateMap: Record<TemplateId, Template> = {
   monochrome: monochromeTemplate,
   "neo-grid": neoGridTemplate,
   "warm-zine": warmZineTemplate,
+  "warm-sun": warmSunTemplate,
+  memo: memoTemplate,
   "noir-magazine": noirMagazineTemplate,
   "ivory-essay": ivoryEssayTemplate,
   "red-ledger": redLedgerTemplate,
