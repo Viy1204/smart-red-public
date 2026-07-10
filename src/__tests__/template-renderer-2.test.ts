@@ -32,6 +32,8 @@ describe("Template switching", () => {
       "sr-monochrome-card",
       "sr-neo-grid-card",
       "sr-warm-zine-card",
+      "sr-warm-sun-card",
+      "sr-memo-card",
       "sr-noir-card",
       "sr-ivory-essay-card",
       "sr-red-ledger-card",
@@ -51,12 +53,14 @@ describe("Template switching", () => {
   });
 
   test("ships every polished template", () => {
-    expect(templates.length).toBe(19);
+    expect(templates.length).toBe(21);
     expect(templates.map((template) => template.name)).toEqual([
       "editorial",
       "monochrome",
       "neo-grid",
       "warm-zine",
+      "warm-sun",
+      "memo",
       "noir-magazine",
       "ivory-essay",
       "red-ledger",

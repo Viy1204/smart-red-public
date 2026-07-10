@@ -6,6 +6,11 @@ import type { TemplateThemeOverrides, TemplateUserInfo } from './templates/types
 
 export type HeadingSplitLevel = 'h1' | 'h2';
 
+export interface CoverSettings {
+  enabled: boolean;
+  showAuthor: boolean;
+}
+
 export interface SmartRedSettings {
   template: TemplateId;
   fontSize: number;
@@ -13,9 +18,67 @@ export interface SmartRedSettings {
   headingLevel: HeadingSplitLevel;
   user: TemplateUserInfo;
   theme: TemplateThemeOverrides;
+  cover: CoverSettings;
   topSafeArea: number;
   exportPixelRatio: number;
 }
+
+// One-click color palettes ported from note-to-red's built-in themes. They
+// fill the Custom Theme fields below; templates keep their own quote/code
+// backgrounds, so presets pair best with templates of matching lightness.
+export interface ThemePreset {
+  id: string;
+  label: string;
+  theme: Partial<TemplateThemeOverrides>;
+}
+
+export const THEME_PRESETS: ThemePreset[] = [
+  {
+    id: 'ntr-default',
+    label: '深夜备忘 (深)',
+    theme: { textColor: '#f2f2f7', backgroundColor: '#1c1c1e', accentColor: '#0a84ff', boldColor: '#0a84ff', h1Color: '#f2f2f7', h2Color: '#f2f2f7', h3Color: '#f2f2f7' },
+  },
+  {
+    id: 'ntr-minimal',
+    label: '极简白',
+    theme: { textColor: '#333333', backgroundColor: '#ffffff', accentColor: '#6c9eb8', boldColor: '#4a4a4a', h1Color: '#333333', h2Color: '#333333', h3Color: '#333333' },
+  },
+  {
+    id: 'ntr-elegant',
+    label: '优雅紫黑 (深)',
+    theme: { textColor: '#c4b8dd', backgroundColor: '#1a1721', accentColor: '#b490ff', boldColor: '#b490ff', h1Color: '#e2d9f3', h2Color: '#e2d9f3', h3Color: '#e2d9f3' },
+  },
+  {
+    id: 'ntr-cyber',
+    label: '赛博朋克',
+    theme: { textColor: '#333333', backgroundColor: '#ffffff', accentColor: '#00ffaa', boldColor: '#ff00ff', h1Color: '#ff00ff', h2Color: '#ff00ff', h3Color: '#ff00ff' },
+  },
+  {
+    id: 'ntr-forest',
+    label: '森林清晨 (深)',
+    theme: { textColor: '#e8f5e9', backgroundColor: '#1a2420', accentColor: '#2ecc71', boldColor: '#2ecc71', h1Color: '#2ecc71', h2Color: '#2ecc71', h3Color: '#2ecc71' },
+  },
+  {
+    id: 'ntr-ocean',
+    label: '深海之境 (深)',
+    theme: { textColor: '#e6f7ff', backgroundColor: '#0a192f', accentColor: '#40a9ff', boldColor: '#40a9ff', h1Color: '#40a9ff', h2Color: '#40a9ff', h3Color: '#40a9ff' },
+  },
+  {
+    id: 'ntr-sakura',
+    label: '樱花飞舞 (深)',
+    theme: { textColor: '#fff5f7', backgroundColor: '#1f1a1d', accentColor: '#ff69b4', boldColor: '#ff69b4', h1Color: '#ffb6c1', h2Color: '#ffb6c1', h3Color: '#ffb6c1' },
+  },
+  {
+    id: 'ntr-starry',
+    label: '星空梦境 (深)',
+    theme: { textColor: '#f0e6ff', backgroundColor: '#0d0f1a', accentColor: '#9b59b6', boldColor: '#9b59b6', h1Color: '#9370db', h2Color: '#9370db', h3Color: '#9370db' },
+  },
+  {
+    id: 'ntr-yueling',
+    label: '悦灵雅棕 (深)',
+    theme: { textColor: '#ffffff', backgroundColor: '#1c1c1e', accentColor: '#c57512', boldColor: '#c57512', h1Color: '#f2f2f7', h2Color: '#f2f2f7', h3Color: '#f2f2f7' },
+  },
+];
 
 export const DEFAULT_SETTINGS: SmartRedSettings = {
   template: 'editorial',
@@ -33,6 +96,10 @@ export const DEFAULT_SETTINGS: SmartRedSettings = {
     roundAvatar: true,
     verifiedBadge: false,
   },
+  cover: {
+    enabled: false,
+    showAuthor: true,
+  },
   topSafeArea: 0,
   theme: {
     fontFamily: '',
@@ -43,7 +110,7 @@ export const DEFAULT_SETTINGS: SmartRedSettings = {
     h1Color: '',
     h2Color: '',
     h3Color: '',
-    spacing: 24,
+    spacing: 28,
   },
   exportPixelRatio: 2,
 };
@@ -275,7 +342,56 @@ export class SmartRedSettingTab extends PluginSettingTab {
           })
       );
 
+    new Setting(containerEl).setName('Cover Page').setHeading();
+
+    new Setting(containerEl)
+      .setName('Enable cover')
+      .setDesc('Prepend a big-type title card (exported as <title>-00.png). The title also stays on the first content page.')
+      .addToggle((toggle) => {
+        toggle
+          .setValue(this.plugin.settings.cover.enabled)
+          .onChange(async (value) => {
+            this.plugin.settings.cover.enabled = value;
+            await this.plugin.saveSettings();
+            this.plugin.refreshView();
+          });
+      });
+
+    new Setting(containerEl)
+      .setName('Author card on cover')
+      .setDesc('Show avatar, nickname and handle at the bottom of the cover')
+      .addToggle((toggle) => {
+        toggle
+          .setValue(this.plugin.settings.cover.showAuthor)
+          .onChange(async (value) => {
+            this.plugin.settings.cover.showAuthor = value;
+            await this.plugin.saveSettings();
+            this.plugin.refreshView();
+          });
+      });
+
     new Setting(containerEl).setName('Custom Theme').setHeading();
+
+    new Setting(containerEl)
+      .setName('Theme preset')
+      .setDesc('One-click palettes ported from note-to-red. Fills the color fields below; light palettes pair best with light templates.')
+      .addDropdown((dropdown) => {
+        dropdown.addOption('', 'Custom');
+        for (const preset of THEME_PRESETS) {
+          dropdown.addOption(preset.id, preset.label);
+        }
+        dropdown.setValue('').onChange(async (value) => {
+          const preset = THEME_PRESETS.find((p) => p.id === value);
+          if (!preset) return;
+          this.plugin.settings.theme = {
+            ...this.plugin.settings.theme,
+            ...preset.theme,
+          };
+          await this.plugin.saveSettings();
+          this.plugin.refreshView();
+          this.display();
+        });
+      });
 
     new Setting(containerEl)
       .setName('Font family')

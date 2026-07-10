@@ -36,6 +36,11 @@ export interface TemplateRenderContext {
   topSafeArea?: number;
 }
 
+export interface CoverRenderContext extends TemplateRenderContext {
+  title: string;
+  showAuthor?: boolean;
+}
+
 export interface Template {
   name: string;
   displayName: string;
@@ -45,10 +50,15 @@ export interface Template {
   lineHeightRatio: number;
   backgroundColor: string;
   styles: string;
+  // Templates with a custom top chrome (e.g. memo's nav bar) declare the
+  // minimum header reserve here; computeHeaderReserve takes the max of this
+  // and the profile-derived value so the pagination budget stays in sync.
+  headerReserveMinPx?: number;
   layout(
     el: HTMLElement,
     blocks: SemanticBlock[],
     page: PaginationDecision,
     context?: TemplateRenderContext
   ): void;
+  layoutCover(el: HTMLElement, context: CoverRenderContext): void;
 }

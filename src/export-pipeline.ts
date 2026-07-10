@@ -44,6 +44,11 @@ export function pageFileName(index: number, title?: string): string {
 	return `${sanitizeFileName(title ?? "")}-${String(index + 1).padStart(2, "0")}.png`;
 }
 
+/** Exported cover name: `<title>-00.png` sorts naturally before page -01. */
+export function coverFileName(title?: string): string {
+	return `${sanitizeFileName(title ?? "")}-00.png`;
+}
+
 export function isLikelyBlankImageData(
 	data: Uint8ClampedArray,
 	width: number,
@@ -135,13 +140,22 @@ export class ExportPipeline {
 	 * Export all page containers as a ZIP file.
 	 * Each page is named: 小红书笔记_第N页.png
 	 */
-	async exportAllPages(containers: HTMLElement[], title?: string): Promise<Blob> {
+	async exportAllPages(
+		containers: HTMLElement[],
+		title?: string,
+		hasCover = false,
+	): Promise<Blob> {
 		const files: Record<string, Uint8Array> = {};
 
 		for (let i = 0; i < containers.length; i++) {
 			const blob = await this.renderToBlob(containers[i], i);
 			const array = new Uint8Array(await blob.arrayBuffer());
-			files[pageFileName(i, title)] = array;
+			const name = hasCover
+				? i === 0
+					? coverFileName(title)
+					: pageFileName(i - 1, title)
+				: pageFileName(i, title);
+			files[name] = array;
 		}
 
 		return new Promise((resolve, reject) => {
