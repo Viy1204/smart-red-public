@@ -1,5 +1,11 @@
 import { SemanticBlock, BlockType } from "./types";
-import { breakLines, type LineBreak } from "./cjk-line-breaker";
+import {
+  breakLines,
+  getBreakOpportunities,
+  isProhibitedAtEnd,
+  isProhibitedAtStart,
+  type LineBreak,
+} from "./cjk-line-breaker";
 
 export interface PaginationDecision {
   pageIndex: number;
@@ -84,6 +90,43 @@ export function createParagraphFragment(
   };
 }
 
+// Same content and metadata contract as createParagraphFragment, addressed by
+// character offset instead of estimated-line index. Safe because breakLines
+// tiles the text contiguously with `text === content.slice(start, end)`.
+export function sliceParagraph(
+  block: SemanticBlock,
+  start: number,
+  end: number
+): SemanticBlock {
+  const baseStart = typeof block.metadata?.fragmentStart === "number"
+    ? block.metadata.fragmentStart
+    : 0;
+
+  return {
+    ...block,
+    content: block.content.slice(start, end),
+    metadata: {
+      ...block.metadata,
+      fragmentStart: baseStart + start,
+      fragmentEnd: baseStart + end,
+    },
+  };
+}
+
+// Cutting inside `**bold**` or a link would leak raw markers into both halves.
+const CUT_UNSAFE = /[*`~[\]\\\n]/;
+
+// Line-break opportunities strictly inside (from, to) that also respect kinsoku,
+// so a refined cut never strands punctuation or halves a Latin word.
+function safeCutPositions(content: string, from: number, to: number): number[] {
+  return getBreakOpportunities(content).filter((pos) => {
+    if (pos <= from || pos >= to) return false;
+    const prev = content[pos - 1] ?? "";
+    const next = content[pos] ?? "";
+    return !isProhibitedAtEnd(prev) && !isProhibitedAtStart(next);
+  });
+}
+
 interface SplitResult {
   first: SemanticBlock;
   second: SemanticBlock;
@@ -115,6 +158,36 @@ function binarySearchMax(
   return best;
 }
 
+// `breakWidthFor` estimates characters-per-line as floor(column / fontSize), but
+// the browser fits more: a line carrying Latin words or narrow punctuation holds
+// a character or two extra. Cutting on an estimated boundary therefore lands a
+// character or two off the real one, and the page's last rendered line can end
+// up nearly empty — at worst a single orphan character.
+//
+// So walk the cut forward through the window the coarse search rejected, taking
+// the furthest position that still fits. `to` is known not to fit, so the result
+// is the last cut before the text spills onto another line: the final rendered
+// line comes out full and no orphan is possible.
+function refineParagraphCut(
+  block: SemanticBlock,
+  current: SemanticBlock[],
+  ctx: PaginateContext,
+  from: number,
+  to: number
+): number {
+  if (to <= from) return from;
+  if (CUT_UNSAFE.test(block.content.slice(from, to))) return from;
+
+  const stops = safeCutPositions(block.content, from, to);
+  if (stops.length === 0) return from;
+
+  const k = binarySearchMax(1, stops.length, (i) =>
+    ctx.measure([...current, sliceParagraph(block, 0, stops[i - 1])]) <=
+    ctx.availableHeight
+  );
+  return k >= 1 ? stops[k - 1] : from;
+}
+
 function trySplitParagraph(
   block: SemanticBlock,
   current: SemanticBlock[],
@@ -129,8 +202,11 @@ function trySplitParagraph(
   );
   if (best < 1) return null;
 
-  const first = createParagraphFragment(block, lines, 0, best);
-  const second = createParagraphFragment(block, lines, best, lines.length);
+  const coarseCut = lines[best - 1].end;
+  const cut = refineParagraphCut(block, current, ctx, coarseCut, lines[best].end);
+
+  const first = sliceParagraph(block, 0, cut);
+  const second = sliceParagraph(block, cut, block.content.length);
   if (!first.content.trim() || !second.content.trim()) return null;
   return { first, second };
 }

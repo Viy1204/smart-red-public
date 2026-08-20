@@ -9,6 +9,9 @@ export type HeadingSplitLevel = 'h1' | 'h2';
 export interface CoverSettings {
   enabled: boolean;
   showAuthor: boolean;
+  // The cover already renders the title as a full-bleed headline, so the source
+  // H1 would show it a second time on the first content card.
+  hideFirstHeading: boolean;
 }
 
 export interface SmartRedSettings {
@@ -16,6 +19,9 @@ export interface SmartRedSettings {
   fontSize: number;
   chromeFontSize: number;
   headingLevel: HeadingSplitLevel;
+  // Obsidian ships with "Strict line breaks" off, so a single newline shows as a
+  // break in the editor. Match that instead of CommonMark's fold-to-space.
+  softLineBreaks: boolean;
   user: TemplateUserInfo;
   theme: TemplateThemeOverrides;
   cover: CoverSettings;
@@ -85,6 +91,7 @@ export const DEFAULT_SETTINGS: SmartRedSettings = {
   fontSize: 31,
   chromeFontSize: 22,
   headingLevel: 'h2',
+  softLineBreaks: true,
   user: {
     avatar: '',
     nickname: '',
@@ -99,6 +106,7 @@ export const DEFAULT_SETTINGS: SmartRedSettings = {
   cover: {
     enabled: false,
     showAuthor: true,
+    hideFirstHeading: true,
   },
   topSafeArea: 0,
   theme: {
@@ -194,11 +202,26 @@ export class SmartRedSettingTab extends PluginSettingTab {
       .setDesc('Font size for card chrome: author, title, footer and page number')
       .addSlider((slider) => {
         slider
-          .setLimits(14, 32, 1)
+          .setLimits(14, 36, 1)
           .setValue(this.plugin.settings.chromeFontSize)
           .setDynamicTooltip()
           .onChange(async (value) => {
             this.plugin.settings.chromeFontSize = value;
+            await this.plugin.saveSettings();
+            this.plugin.refreshView();
+          });
+      });
+
+    new Setting(containerEl)
+      .setName('Keep single line breaks')
+      .setDesc(
+        'A lone newline inside a paragraph shows as a line break, matching Obsidian with "Strict line breaks" off. Turn this off for CommonMark behaviour, where only two trailing spaces or a backslash break a line.'
+      )
+      .addToggle((toggle) => {
+        toggle
+          .setValue(this.plugin.settings.softLineBreaks !== false)
+          .onChange(async (value) => {
+            this.plugin.settings.softLineBreaks = value;
             await this.plugin.saveSettings();
             this.plugin.refreshView();
           });
@@ -365,6 +388,19 @@ export class SmartRedSettingTab extends PluginSettingTab {
           .setValue(this.plugin.settings.cover.showAuthor)
           .onChange(async (value) => {
             this.plugin.settings.cover.showAuthor = value;
+            await this.plugin.saveSettings();
+            this.plugin.refreshView();
+          });
+      });
+
+    new Setting(containerEl)
+      .setName('Drop the title heading')
+      .setDesc('With a cover, the first H1 would repeat the title on the first content card')
+      .addToggle((toggle) => {
+        toggle
+          .setValue(this.plugin.settings.cover.hideFirstHeading !== false)
+          .onChange(async (value) => {
+            this.plugin.settings.cover.hideFirstHeading = value;
             await this.plugin.saveSettings();
             this.plugin.refreshView();
           });

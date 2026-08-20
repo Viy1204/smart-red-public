@@ -210,32 +210,43 @@ th {
   font-size: var(--chrome-size, 22px);
   line-height: 1;
   color: var(--chrome);
-  text-transform: uppercase;
+  text-transform: var(--chrome-transform, uppercase);
   gap: 24px;
 }
 .card-chrome.top {
   top: calc(34px + var(--top-safe, 0px));
   padding-bottom: 16px;
-  border-bottom: 1px solid var(--rule);
+  border-bottom: var(--chrome-rule, 1px) solid var(--rule);
 }
 .card-chrome.bottom {
   bottom: 34px;
   padding-top: 16px;
-  border-top: 1px solid var(--rule);
+  border-top: var(--chrome-rule, 1px) solid var(--rule);
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto auto;
   gap: 22px;
 }
-.article-title-chrome,
 .card-chrome.bottom > span {
   min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+/* The section title is the only chrome element a template may want bigger,
+   smaller or wrapped independently of --chrome-size, so every knob is a var
+   whose default reproduces the previous single-line ellipsis behaviour. */
 .article-title-chrome {
+  min-width: 0;
   max-width: 520px;
   text-align: right;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-size: var(--chrome-title-size, var(--chrome-size, 22px));
+  line-height: var(--chrome-title-lh, inherit);
+  white-space: var(--chrome-title-wrap, nowrap);
+  display: var(--chrome-title-display, block);
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: var(--chrome-title-lines, 1);
 }
 .profile-chrome {
   display: inline-flex;
@@ -1595,12 +1606,24 @@ export const warmSunTemplate = makeTemplate({
     --display: var(--serif);
     --body-font: var(--serif);
     --caption: var(--serif);
-    --h1: 66px;
+    /* 66px 下 20 字上下的中英混排标题会挤成三行（拉丁词不能断开），balance
+       把三行都压到六成宽，观感很差。60px 让同一批标题落回两行、末行填到 95%。 */
+    --h1: 60px;
     --h2: 50px;
     --h3: 40px;
     --h4: 34px;
     --quote-size: 35px;
     --para-gap: 24px;
+    /* 对标 note-to-red：去掉报刊味的全大写与上下分隔线，并把 section title
+       从 --chrome-size 解耦，好让名片头单独放大而标题不跟着涨（见
+       docs/warm-sun-layout-spec.md）。 */
+    --chrome-transform: none;
+    --chrome-rule: 0;
+    --chrome-title-size: 26px;
+    --chrome-title-lh: 1.35;
+    --chrome-title-wrap: normal;
+    --chrome-title-lines: 2;
+    --chrome-title-display: -webkit-box;
   `,
   extras: `
 .sr-warm-sun-card em { color: #b87333; font-style: italic; }

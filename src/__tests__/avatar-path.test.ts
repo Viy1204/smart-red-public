@@ -8,12 +8,12 @@ describe('absolutePathToFileUrl', () => {
   });
 
   test('percent-encodes non-ASCII filenames (e.g. CJK)', () => {
-    const url = absolutePathToFileUrl('C:\\Users\\zhuyifan\\Pictures\\微信图片_562.png');
+    const url = absolutePathToFileUrl('C:\\Users\\x\\Pictures\\头像图片_562.png');
     expect(url).not.toBeNull();
-    expect(url!.startsWith('file:///C:/Users/zhuyifan/Pictures/')).toBe(true);
-    expect(/微信图片/.test(url!)).toBe(false);
+    expect(url!.startsWith('file:///C:/Users/x/Pictures/')).toBe(true);
+    expect(/头像图片/.test(url!)).toBe(false);
     expect(url!.endsWith('_562.png')).toBe(true);
-    expect(decodeURI(url!)).toBe('file:///C:/Users/zhuyifan/Pictures/微信图片_562.png');
+    expect(decodeURI(url!)).toBe('file:///C:/Users/x/Pictures/头像图片_562.png');
   });
 
   test('converts a POSIX absolute path', () => {

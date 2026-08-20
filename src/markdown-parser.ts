@@ -16,9 +16,12 @@ export class MarkdownParser {
     this.renderer = renderer ?? null;
   }
 
-  parse(markdown: string): SemanticBlock[] {
+  // softLineBreaks mirrors Obsidian's "Strict line breaks" being off (its
+  // default): a single newline inside a paragraph is a visible break. CommonMark
+  // would fold it into a space, which is why the editor and the card disagreed.
+  parse(markdown: string, options?: { softLineBreaks?: boolean }): SemanticBlock[] {
     const preprocessed = this.preprocess(markdown);
-    return this.parseBlocks(preprocessed);
+    return this.parseBlocks(preprocessed, options?.softLineBreaks === true);
   }
 
   async renderToHTML(block: SemanticBlock): Promise<string | null> {
@@ -72,7 +75,7 @@ export class MarkdownParser {
     return text.replace(/\$\$[\s\S]*?\$\$/g, '');
   }
 
-  private parseBlocks(text: string): SemanticBlock[] {
+  private parseBlocks(text: string, softLineBreaks = false): SemanticBlock[] {
     const blocks: SemanticBlock[] = [];
     const lines = text.split('\n');
     let i = 0;
@@ -174,7 +177,7 @@ export class MarkdownParser {
       if (paraContent.trim()) {
         blocks.push({
           type: BlockType.Paragraph,
-          content: this.normalizeParagraphSoftBreaks(paraContent),
+          content: this.normalizeParagraphSoftBreaks(paraContent, softLineBreaks),
         });
       }
       i = endLine + 1;
@@ -252,12 +255,12 @@ export class MarkdownParser {
     return { content: content.join('\n'), endLine: Math.max(start, i - 1) };
   }
 
-  private normalizeParagraphSoftBreaks(content: string): string {
+  private normalizeParagraphSoftBreaks(content: string, softLineBreaks = false): string {
     const lines = content.split('\n');
     let result = '';
 
     for (const rawLine of lines) {
-      const hardBreak = /(?: {2,}|\\)\s*$/.test(rawLine);
+      const hardBreak = softLineBreaks || /(?: {2,}|\\)\s*$/.test(rawLine);
       const line = rawLine.replace(/(?: {2,}|\\)\s*$/, '').trim();
       if (!line) continue;
 
