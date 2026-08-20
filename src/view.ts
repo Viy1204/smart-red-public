@@ -69,6 +69,22 @@ type PageModel =
   | { kind: 'cover' }
   | { kind: 'content'; decision: PaginationDecision };
 
+// The title H1 is what the cover renders as its headline, so leaving it in the
+// flow prints the title twice. It has to leave the block list *before*
+// pagination — hiding it in CSS would make measurement and rendering disagree,
+// which is exactly how stray whitespace and early page breaks creep back in.
+// Matches extractDocumentTitle: the first level-1 heading with real content.
+export function stripTitleHeading(blocks: SemanticBlock[]): SemanticBlock[] {
+  const index = blocks.findIndex(
+    (block) =>
+      block.type === BlockType.Heading &&
+      block.metadata?.level === 1 &&
+      block.content.trim().length > 0
+  );
+  if (index < 0) return blocks;
+  return [...blocks.slice(0, index), ...blocks.slice(index + 1)];
+}
+
 export class RedView extends ItemView {
   private pluginSettings: SmartRedSettings;
   private onSettingsChange: ((settings: SmartRedSettings) => Promise<void> | void) | null;
@@ -598,14 +614,23 @@ export class RedView extends ItemView {
       await this.waitForFonts();
       this.resolvedAvatar = await this.resolveAvatar(activeFile);
       if (seq !== this.renderSeq) return;
-      const blocks = await this.prepareBlocksForRender(this.parser.parse(content), activeFile);
+      const blocks = await this.prepareBlocksForRender(
+        this.parser.parse(content, {
+          softLineBreaks: this.pluginSettings.softLineBreaks !== false,
+        }),
+        activeFile
+      );
       if (blocks.length === 0) {
         this.showEmptyState('No renderable content found');
         return;
       }
       this.documentTitle = this.extractDocumentTitle(blocks, activeFile);
 
-      const segments = buildRenderSegments(blocks);
+      const flow =
+        this.pluginSettings.cover.enabled && this.pluginSettings.cover.hideFirstHeading !== false
+          ? stripTitleHeading(blocks)
+          : blocks;
+      const segments = buildRenderSegments(flow);
       this.decisions = [];
       const availableHeight = this.getAvailableContentHeight(template);
       const measurer = this.createPageMeasurer();
