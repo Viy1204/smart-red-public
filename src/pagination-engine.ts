@@ -116,6 +116,37 @@ export function sliceParagraph(
 // Cutting inside `**bold**` or a link would leak raw markers into both halves.
 const CUT_UNSAFE = /[*`~[\]\\\n]/;
 
+// CUT_UNSAFE only guards the refine window; the coarse line-based cut can still
+// land inside an inline span, stranding unpaired markers on both pages where
+// they render as literal asterisks. Collect span ranges so the cut can step out.
+function inlineSpanRanges(content: string): Array<[number, number]> {
+  const ranges: Array<[number, number]> = [];
+  const patterns = [
+    /[*][*][^*]+[*][*]/g,
+    /~~[^~]+~~/g,
+    /`[^`]+`/g,
+    /(?<=^|[^*])[*][^*]+[*](?=[^*]|$)/g,
+  ];
+  for (const re of patterns) {
+    let m: RegExpExecArray | null;
+    while ((m = re.exec(content)) !== null) {
+      ranges.push([m.index, m.index + m[0].length]);
+    }
+  }
+  return ranges;
+}
+
+// Move a cut that falls inside an inline span back to the span start, so the
+// whole span flows onto the next page intact. Returns 0 when the span opens
+// the paragraph; the caller then refuses the split and the paragraph moves
+// to the next page whole.
+function adjustCutOutsideInlineSpans(content: string, cut: number): number {
+  for (const [start, end] of inlineSpanRanges(content)) {
+    if (cut > start && cut < end) return start;
+  }
+  return cut;
+}
+
 // Line-break opportunities strictly inside (from, to) that also respect kinsoku,
 // so a refined cut never strands punctuation or halves a Latin word.
 function safeCutPositions(content: string, from: number, to: number): number[] {
@@ -203,7 +234,9 @@ function trySplitParagraph(
   if (best < 1) return null;
 
   const coarseCut = lines[best - 1].end;
-  const cut = refineParagraphCut(block, current, ctx, coarseCut, lines[best].end);
+  const rawCut = refineParagraphCut(block, current, ctx, coarseCut, lines[best].end);
+  const cut = adjustCutOutsideInlineSpans(block.content, rawCut);
+  if (cut <= 0) return null;
 
   const first = sliceParagraph(block, 0, cut);
   const second = sliceParagraph(block, cut, block.content.length);
