@@ -43,6 +43,7 @@ export function escapeHtml(text: string): string {
 function applyEmphasis(escaped: string): string {
   return escaped
     .replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>")
+    .replace(/==((?:[^=]|=(?!=))+)==/g, "<mark>$1</mark>")
     .replace(/~~([^~]+)~~/g, "<del>$1</del>")
     .replace(/(^|[^*])\*([^*\n]+)\*/g, "$1<em>$2</em>");
 }
@@ -69,10 +70,16 @@ export function renderInlineMarkdown(text: string): string {
     const cleanLabel = label.trim() || url.replace(/^https?:\/\//, "").replace(/\/$/, "");
     return stash(`<a href="${url}">${applyEmphasis(cleanLabel)}</a>`);
   });
-  safe = safe.replace(/(https?:\/\/[^\s<]+)/g, (_m, url: string) => {
+  const stashUrl = (url: string) => {
     const label = url.replace(/^https?:\/\//, "").replace(/\/$/, "");
     return stash(`<a href="${url}">${label}</a>`);
-  });
+  };
+  // Match an outer highlight before its URL so closing == stays outside href.
+  safe = safe.replace(/==((?:[^=]|=(?!=))+)==|https?:\/\/[^\s<]+/g, (match, highlight: string | undefined) =>
+    highlight === undefined
+      ? stashUrl(match)
+      : `==${highlight.replace(/https?:\/\/[^\s<]+/g, stashUrl)}==`
+  );
   safe = applyEmphasis(safe);
 
   return safe.replace(/\u0000(\d+)\u0000/g, (_m, idx: string) => tokens[Number(idx)] ?? "");
@@ -85,6 +92,7 @@ export function stripInlineMarkdown(text: string): string {
     .replace(/\[\[([^\]|#]+)(?:#[^\]|]+)?(?:\|([^\]]+))?\]\]/g, (_m, page: string, alias: string) => alias || page)
     .replace(/`([^`]+)`/g, "$1")
     .replace(/\*\*([^*]+)\*\*/g, "$1")
+    .replace(/==((?:[^=]|=(?!=))+)==/g, "$1")
     .replace(/~~([^~]+)~~/g, "$1")
     .replace(/(^|[^*])\*([^*\n]+)\*/g, "$1$2")
     .replace(/[_#>]/g, "")

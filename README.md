@@ -95,7 +95,7 @@ Smart RED paginates automatically. The first `# H1` becomes the article title in
 
 ## Page 1 title
 
-Body text with **bold**, *italic*, `inline code`, and [links](https://example.com).
+Body text with **bold**, ==highlights==, *italic*, `inline code`, and [links](https://example.com).
 
 - Bullet one
 - Bullet two
@@ -148,7 +148,11 @@ The `Custom Theme` section in settings lets you override:
 - `Text color` — body and heading color.
 - `Background color` — card background color.
 - `Accent color` — link, rule and emphasis color.
+- `Bold color` — text color for `**bold**`.
+- `Highlight color` — background color for `==highlighted text==`; can be combined as `==**bold and highlighted**==`.
 - `Paragraph spacing` — paragraph gap in px.
+
+Use the reset button next to `Bold color` or `Highlight color` to restore the template default. Both colors apply to the preview and exported images.
 
 The toolbar also provides shortcuts for body font size, chrome font size and common fonts. Start from a template, then tweak one or two variables. Changing too many colors can break the template's original feel.
 

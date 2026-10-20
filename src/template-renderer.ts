@@ -102,6 +102,7 @@ export class TemplateRenderer {
       "--header-reserve": `${computeHeaderReserve(context?.user, context?.chromeFontSize, template.headerReserveMinPx ?? 0)}px`,
       "--footer-reserve": `${footerReservePx(context?.user?.showFooter !== false)}px`,
       "--top-safe": `${Math.max(0, context?.topSafeArea ?? 0)}px`,
+      ...(theme?.highlightColor ? { "--highlight-color": theme.highlightColor } : {}),
     });
     if (fontSize) {
       cardEl.setCssStyles({ fontSize: `${fontSize}px` });

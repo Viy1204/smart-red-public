@@ -51,6 +51,40 @@ describe("粗切点不劈开行内 markdown span", () => {
     expect(pages[0].blocks[0].content).toBe(content);
   });
 
+  test.each(offsets)("前置 %d 字时高亮 span 完整且不丢字", (n: number) => {
+    const highlight = "==高亮句子标记==";
+    const content = "字".repeat(n) + highlight + "字".repeat(20);
+    const pages = paginateMeasured([paragraph(content)], makeContext(available));
+    const fragments = pages.flatMap((page) => page.blocks.map((block) => block.content));
+
+    expect(fragments.filter((text) => text.includes(highlight))).toHaveLength(1);
+    expect(fragments.join("")).toBe(content);
+  });
+
+  test.each([
+    "==前文**重点句子标记**后文==",
+    "**前文==高亮句子标记==后文**",
+  ])("加粗与高亮嵌套时保留整个 span：%s", (span: string) => {
+    const content = "字".repeat(15) + span + "字".repeat(20);
+    const pages = paginateMeasured([paragraph(content)], makeContext(available));
+    const fragments = pages.flatMap((page) => page.blocks.map((block) => block.content));
+
+    expect(fragments.filter((text) => text.includes(span))).toHaveLength(1);
+    expect(fragments.join("")).toBe(content);
+  });
+
+  test.each([
+    "==前文`a=b`后文高亮句子==",
+    "==前文[链接](https://example.com/?a=b)后文==",
+  ])("含等号的高亮内容分页时保持完整：%s", (span: string) => {
+    const content = "字".repeat(15) + span + "字".repeat(20);
+    const pages = paginateMeasured([paragraph(content)], makeContext(available));
+    const fragments = pages.flatMap((page) => page.blocks.map((block) => block.content));
+
+    expect(fragments.filter((text) => text.includes(span))).toHaveLength(1);
+    expect(fragments.join("")).toBe(content);
+  });
+
   test("删除线 span 同样不被劈开", () => {
     const content = "字".repeat(18) + "~~划掉的句子~~" + "字".repeat(20);
     const pages = paginateMeasured([paragraph(content)], makeContext(available));

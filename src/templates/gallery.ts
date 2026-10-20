@@ -24,6 +24,7 @@ const BASE_STYLES = `
 * { box-sizing: border-box; }
 a { color: inherit; text-decoration-thickness: 2px; text-underline-offset: 5px; }
 strong { font-weight: 800; color: var(--strong-color, inherit); }
+mark { background: var(--highlight-color, rgba(255, 208, 0, 0.25)); color: inherit; }
 em { font-style: italic; }
 del { opacity: 0.62; }
 code {

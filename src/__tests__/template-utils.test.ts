@@ -24,6 +24,39 @@ describe("template inline Markdown rendering", () => {
     expect(html).toContain('<a href="https://openai.com">openai.com</a>');
   });
 
+  test("renders highlights with nested emphasis and escaped text", () => {
+    expect(renderInlineMarkdown("这是 ==重点==。==另一处==")).toBe("这是 <mark>重点</mark>。<mark>另一处</mark>");
+    expect(renderInlineMarkdown("==**重点**与*语气*==")).toBe("<mark><strong>重点</strong>与<em>语气</em></mark>");
+    expect(renderInlineMarkdown("**==重点==**")).toBe("<strong><mark>重点</mark></strong>");
+    expect(renderInlineMarkdown("==x < y & z==")).toBe("<mark>x &lt; y &amp; z</mark>");
+    expect(renderInlineMarkdown("==a=b==")).toBe("<mark>a=b</mark>");
+  });
+
+  test("renders highlights in link labels without changing URLs or inline code", () => {
+    expect(renderInlineMarkdown("[==重点==](https://example.com/?q==value==)")).toBe(
+      '<a href="https://example.com/?q==value=="><mark>重点</mark></a>'
+    );
+    expect(renderInlineMarkdown("`==原样显示==` ==高亮==")).toBe("<code>==原样显示==</code> <mark>高亮</mark>");
+    expect(renderInlineMarkdown("https://example.com/?q==value==")).toBe(
+      '<a href="https://example.com/?q==value==">example.com/?q==value==</a>'
+    );
+  });
+
+  test("highlights bare URLs without including closing markers in the href", () => {
+    expect(renderInlineMarkdown("==https://example.com==")).toBe(
+      '<mark><a href="https://example.com">example.com</a></mark>'
+    );
+    expect(renderInlineMarkdown("==https://example.com/?a=b 与文字==")).toBe(
+      '<mark><a href="https://example.com/?a=b">example.com/?a=b</a> 与文字</mark>'
+    );
+  });
+
+  test("leaves unmatched highlight markers and ordinary equals signs unchanged", () => {
+    expect(renderInlineMarkdown("==未闭合 a = b")).toBe("==未闭合 a = b");
+    expect(renderInlineMarkdown("a = b ====")).toBe("a = b ====");
+    expect(renderInlineMarkdown("a == b")).toBe("a == b");
+  });
+
   test("renders empty-label Markdown links without exposing raw syntax", () => {
     const html = renderInlineMarkdown("[](https://mp.weixin.qq.com/s/demo)");
 
@@ -49,6 +82,8 @@ describe("template inline Markdown rendering", () => {
   test("strips inline Markdown for chrome titles", () => {
     expect(stripInlineMarkdown("**真正的文章标题**")).toBe("真正的文章标题");
     expect(stripInlineMarkdown("[[页面#段落|显示标题]]")).toBe("显示标题");
+    expect(stripInlineMarkdown("==**高亮标题**==")).toBe("高亮标题");
+    expect(stripInlineMarkdown("==a=b==")).toBe("a=b");
   });
 });
 

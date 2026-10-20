@@ -114,7 +114,7 @@ export function sliceParagraph(
 }
 
 // Cutting inside `**bold**` or a link would leak raw markers into both halves.
-const CUT_UNSAFE = /[*`~[\]\\\n]/;
+const CUT_UNSAFE = /[*`~=[\]\\\n]/;
 
 // CUT_UNSAFE only guards the refine window; the coarse line-based cut can still
 // land inside an inline span, stranding unpaired markers on both pages where
@@ -123,6 +123,7 @@ function inlineSpanRanges(content: string): Array<[number, number]> {
   const ranges: Array<[number, number]> = [];
   const patterns = [
     /[*][*][^*]+[*][*]/g,
+    /==(?:[^=]|=(?!=))+==/g,
     /~~[^~]+~~/g,
     /`[^`]+`/g,
     /(?<=^|[^*])[*][^*]+[*](?=[^*]|$)/g,
@@ -141,8 +142,9 @@ function inlineSpanRanges(content: string): Array<[number, number]> {
 // the paragraph; the caller then refuses the split and the paragraph moves
 // to the next page whole.
 function adjustCutOutsideInlineSpans(content: string, cut: number): number {
-  for (const [start, end] of inlineSpanRanges(content)) {
-    if (cut > start && cut < end) return start;
+  const ranges = inlineSpanRanges(content).sort((a, b) => b[0] - a[0]);
+  for (const [start, end] of ranges) {
+    if (cut > start && cut < end) cut = start;
   }
   return cut;
 }
