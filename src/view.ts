@@ -1124,15 +1124,22 @@ export class RedView extends ItemView {
     this.currentPageEl.style.setProperty('--smart-red-scale', scale.toFixed(4));
   }
 
-  private createExportContainer(
-    decision: PaginationDecision,
-    template = getTemplate(this.pluginSettings.template)
+  private createExportCard(
+    exportRoot: HTMLElement,
+    page: PageModel,
+    template: Template
   ): HTMLElement {
-    const exportRoot = this.createExportRoot('smart-red-export-root', template.backgroundColor);
-
-    const pageBlocks = normalizeParagraphFragments(decision.blocks);
-    this.renderer.renderExportCard(exportRoot, pageBlocks, decision, template, this.getRenderContext());
-    return exportRoot;
+    // Capture this card, not the opacity: 0 root that hides it from the workspace.
+    const wrapper = document.createElement('div');
+    wrapper.className = 'smart-red-export-card';
+    exportRoot.appendChild(wrapper);
+    if (page.kind === 'cover') {
+      this.renderer.renderExportCoverCard(wrapper, template, this.getCoverContext());
+    } else {
+      const pageBlocks = normalizeParagraphFragments(page.decision.blocks);
+      this.renderer.renderExportCard(wrapper, pageBlocks, page.decision, template, this.getRenderContext());
+    }
+    return wrapper;
   }
 
   private createExportRoot(className: string, templateBackgroundColor: string): HTMLElement {
@@ -1169,18 +1176,6 @@ export class RedView extends ItemView {
     }
   }
 
-  private createCurrentPageExportContainer(
-    page: PageModel,
-    template = getTemplate(this.pluginSettings.template)
-  ): HTMLElement {
-    if (page.kind === 'cover') {
-      const exportRoot = this.createExportRoot('smart-red-export-root', template.backgroundColor);
-      this.renderer.renderExportCoverCard(exportRoot, template, this.getCoverContext());
-      return exportRoot;
-    }
-    return this.createExportContainer(page.decision, template);
-  }
-
   private currentPageFileName(page: PageModel): string {
     return page.kind === 'cover'
       ? coverFileName(this.documentTitle)
@@ -1195,10 +1190,12 @@ export class RedView extends ItemView {
         return;
       }
 
-      const exportRoot = this.createCurrentPageExportContainer(page);
+      const template = getTemplate(this.pluginSettings.template);
+      const exportRoot = this.createExportRoot('smart-red-export-root', template.backgroundColor);
 
       try {
-        const blob = await this.exporter.renderToBlob(exportRoot, this.currentPageIndex);
+        const card = this.createExportCard(exportRoot, page, template);
+        const blob = await this.exporter.renderToBlob(card, this.currentPageIndex);
         await copyPngBlobToClipboard(blob);
         new Notice('Smart RED image copied');
       } catch (err) {
@@ -1218,10 +1215,12 @@ export class RedView extends ItemView {
         return;
       }
 
-      const exportRoot = this.createCurrentPageExportContainer(page);
+      const template = getTemplate(this.pluginSettings.template);
+      const exportRoot = this.createExportRoot('smart-red-export-root', template.backgroundColor);
 
       try {
-        const blob = await this.exporter.renderToBlob(exportRoot, this.currentPageIndex);
+        const card = this.createExportCard(exportRoot, page, template);
+        const blob = await this.exporter.renderToBlob(card, this.currentPageIndex);
         this.downloadBlob(blob, this.currentPageFileName(page));
         new Notice('Smart RED PNG exported');
       } catch (err) {
@@ -1246,22 +1245,7 @@ export class RedView extends ItemView {
       const hasCover = pages[0]?.kind === 'cover';
 
       try {
-        const containers: HTMLElement[] = [];
-        for (const page of pages) {
-          const wrapper = document.createElement('div');
-          wrapper.className = 'smart-red-export-card';
-          wrapper.setCssStyles({
-            backgroundColor: this.pluginSettings.theme.backgroundColor || template.backgroundColor,
-          });
-          exportRoot.appendChild(wrapper);
-          if (page.kind === 'cover') {
-            this.renderer.renderExportCoverCard(wrapper, template, this.getCoverContext());
-          } else {
-            const pageBlocks = normalizeParagraphFragments(page.decision.blocks);
-            this.renderer.renderExportCard(wrapper, pageBlocks, page.decision, template, this.getRenderContext());
-          }
-          containers.push(wrapper);
-        }
+        const containers = pages.map((page) => this.createExportCard(exportRoot, page, template));
 
         const blob = await this.exporter.exportAllPages(containers, this.documentTitle, hasCover);
         this.downloadBlob(blob, `${sanitizeFileName(this.documentTitle)}.zip`);

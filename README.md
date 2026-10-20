@@ -1,6 +1,6 @@
 # Smart RED
 
-![Obsidian](https://img.shields.io/badge/Obsidian-7C3AED?style=flat-square) ![obsidian-version](https://img.shields.io/badge/Obsidian-%3E%3D0.15.0-7C3AED?style=flat-square) ![version](https://img.shields.io/badge/version-0.1.5-blue?style=flat-square) ![release](https://img.shields.io/github/v/release/Viy1204/smart-red-public?style=flat-square) ![license](https://img.shields.io/badge/license-MIT-blue?style=flat-square) ![typescript](https://img.shields.io/badge/TypeScript-3178C6?style=flat-square&logo=typescript&logoColor=white)
+![Obsidian](https://img.shields.io/badge/Obsidian-7C3AED?style=flat-square) ![obsidian-version](https://img.shields.io/badge/Obsidian-%3E%3D0.15.0-7C3AED?style=flat-square) ![version](https://img.shields.io/badge/version-0.1.6-blue?style=flat-square) ![release](https://img.shields.io/github/v/release/Viy1204/smart-red-public?style=flat-square) ![license](https://img.shields.io/badge/license-MIT-blue?style=flat-square) ![typescript](https://img.shields.io/badge/TypeScript-3178C6?style=flat-square&logo=typescript&logoColor=white)
 
 **Smart RED** is an Obsidian plugin that turns your Markdown notes into **Xiaohongshu (RED) style image cards** at 1080×1440px (3:4 ratio). It packs a measurement driven pagination engine, 19 card templates, image and table rendering, and one click PNG or ZIP export.
 
@@ -276,6 +276,10 @@ Black-and-white magazine, tall serif masthead, drop cap and black thick divider 
 - **Pagination**: custom Folio.js v2 overflow-fill algorithm
 
 ## Development
+
+[smart-red-public](https://github.com/Viy1204/smart-red-public) is the canonical repository for development, issues, pull requests, and releases. Make future changes here.
+
+For a release, update `package.json`, `manifest.json`, and `versions.json`, then run `bun test` and `bun run build`. Merge into `main` and publish a GitHub release whose tag exactly matches the manifest version (for example, `0.1.6`, without a `v` prefix), with `main.js`, `manifest.json`, and `styles.css` attached. The Obsidian Community plugins entry already points here; existing users receive updates from these releases without a new marketplace submission.
 
 ```bash
 # Install
