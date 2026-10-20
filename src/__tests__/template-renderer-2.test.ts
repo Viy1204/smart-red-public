@@ -171,6 +171,41 @@ describe("theme overrides", () => {
     expect(card.style.getPropertyValue("--strong-color")).toBe("#ff0000");
   });
 
+  test("bold and highlight colors are independent in preview and export", () => {
+    const block = makeBlock(BlockType.Paragraph, "**加粗** ==高亮== ==**叠加**==");
+    const page: PaginationDecision = { pageIndex: 0, blocks: [block], hasContinuation: false };
+    const context = { theme: { boldColor: "#a12244", highlightColor: "#ffdd66" } };
+
+    for (const template of templates) {
+      const shadow = renderer.renderCard(document.createElement("div"), [block], page, template, context);
+      const preview = shadow.querySelector(`.${template.cardClassName}`) as HTMLElement;
+      const exported = renderer.renderExportCard(document.createElement("div"), [block], page, template, context);
+
+      for (const card of [preview, exported]) {
+        expect(card.style.getPropertyValue("--strong-color")).toBe("#a12244");
+        expect(card.style.getPropertyValue("--highlight-color")).toBe("#ffdd66");
+        expect(card.querySelector(".article-flow")?.textContent).toContain("加粗 高亮 叠加");
+        expect(card.querySelectorAll("mark")).toHaveLength(2);
+        expect(card.querySelector("mark strong")?.textContent).toBe("叠加");
+      }
+    }
+  });
+
+  test("resetting highlight color restores the template default", () => {
+    const block = makeBlock(BlockType.Paragraph, "==高亮==");
+    const page: PaginationDecision = { pageIndex: 0, blocks: [block], hasContinuation: false };
+    const container = document.createElement("div");
+    renderer.renderExportCard(container, [block], page, editorialTemplate, {
+      theme: { highlightColor: "#ffdd66" },
+    });
+    const card = renderer.renderExportCard(container, [block], page, editorialTemplate, {
+      theme: { highlightColor: "" },
+    });
+
+    expect(card.style.getPropertyValue("--highlight-color")).toBe("");
+    expect(card.querySelector("mark")?.textContent).toBe("高亮");
+  });
+
   test("top safe area publishes --top-safe", () => {
     const block = makeBlock(BlockType.Paragraph, "x");
     const page: PaginationDecision = { pageIndex: 0, blocks: [block], hasContinuation: false };

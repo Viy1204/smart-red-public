@@ -91,7 +91,7 @@ describe('theme presets', () => {
   test('every preset fills the full color set', () => {
     for (const preset of THEME_PRESETS) {
       expect(Object.keys(preset.theme).sort()).toEqual(
-        ['accentColor', 'backgroundColor', 'boldColor', 'h1Color', 'h2Color', 'h3Color', 'textColor'].sort()
+        ['accentColor', 'backgroundColor', 'boldColor', 'highlightColor', 'h1Color', 'h2Color', 'h3Color', 'textColor'].sort()
       );
     }
   });

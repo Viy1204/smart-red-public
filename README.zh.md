@@ -1,6 +1,6 @@
 # Smart RED
 
-![Obsidian](https://img.shields.io/badge/Obsidian-7C3AED?style=flat-square) ![obsidian-version](https://img.shields.io/badge/Obsidian-%3E%3D0.15.0-7C3AED?style=flat-square) ![version](https://img.shields.io/badge/version-0.1.6-blue?style=flat-square) ![release](https://img.shields.io/github/v/release/Viy1204/smart-red-public?style=flat-square) ![license](https://img.shields.io/badge/license-MIT-blue?style=flat-square) ![typescript](https://img.shields.io/badge/TypeScript-3178C6?style=flat-square&logo=typescript&logoColor=white)
+![Obsidian](https://img.shields.io/badge/Obsidian-7C3AED?style=flat-square) ![obsidian-version](https://img.shields.io/badge/Obsidian-%3E%3D0.15.0-7C3AED?style=flat-square) ![version](https://img.shields.io/badge/version-0.1.7-blue?style=flat-square) ![release](https://img.shields.io/github/v/release/Viy1204/smart-red-public?style=flat-square) ![license](https://img.shields.io/badge/license-MIT-blue?style=flat-square) ![typescript](https://img.shields.io/badge/TypeScript-3178C6?style=flat-square&logo=typescript&logoColor=white)
 
 > English documentation: [README.md](./README.md)
 
@@ -95,7 +95,7 @@ Smart RED 会自动分页。第一条 `# H1` 会作为文章标题显示在卡�
 
 ## 第 1 页标题
 
-这里写正文。可以使用 **粗体**、*斜体*、`行内代码`、[链接](https://example.com)。
+这里写正文。可以使用 **粗体**、==高亮==、*斜体*、`行内代码`、[链接](https://example.com)。
 
 - 要点一
 - 要点二
@@ -172,7 +172,11 @@ Smart RED 默认会尽量填满每张图：
 - `Text color`：正文和标题颜色。
 - `Background color`：卡片背景色。
 - `Accent color`：强调色、链接色、装饰线颜色。
+- `Bold color`：`**加粗文字**`的文字颜色。
+- `Highlight color`：`==高亮文字==`的背景颜色，也可以写成 `==**加粗并高亮**==` 叠加使用。
 - `Paragraph spacing`：段落间距。
+
+点击 `Bold color` 或 `Highlight color` 旁的重置按钮，可恢复模板默认配色。这两项设置同时应用于预览和导出图片。
 
 预览顶部工具栏也提供了正文字号、页眉页脚字号和常用字体的快捷入口，适合边看边调。
 

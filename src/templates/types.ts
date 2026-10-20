@@ -19,6 +19,7 @@ export interface TemplateThemeOverrides {
   backgroundColor: string;
   accentColor: string;
   boldColor: string;
+  highlightColor: string;
   h1Color: string;
   h2Color: string;
   h3Color: string;

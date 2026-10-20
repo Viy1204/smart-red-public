@@ -42,47 +42,47 @@ export const THEME_PRESETS: ThemePreset[] = [
   {
     id: 'ntr-default',
     label: '深夜备忘 (深)',
-    theme: { textColor: '#f2f2f7', backgroundColor: '#1c1c1e', accentColor: '#0a84ff', boldColor: '#0a84ff', h1Color: '#f2f2f7', h2Color: '#f2f2f7', h3Color: '#f2f2f7' },
+    theme: { textColor: '#f2f2f7', backgroundColor: '#1c1c1e', accentColor: '#0a84ff', boldColor: '#0a84ff', highlightColor: '#183656', h1Color: '#f2f2f7', h2Color: '#f2f2f7', h3Color: '#f2f2f7' },
   },
   {
     id: 'ntr-minimal',
     label: '极简白',
-    theme: { textColor: '#333333', backgroundColor: '#ffffff', accentColor: '#6c9eb8', boldColor: '#4a4a4a', h1Color: '#333333', h2Color: '#333333', h3Color: '#333333' },
+    theme: { textColor: '#333333', backgroundColor: '#ffffff', accentColor: '#6c9eb8', boldColor: '#4a4a4a', highlightColor: '#dae7ed', h1Color: '#333333', h2Color: '#333333', h3Color: '#333333' },
   },
   {
     id: 'ntr-elegant',
     label: '优雅紫黑 (深)',
-    theme: { textColor: '#c4b8dd', backgroundColor: '#1a1721', accentColor: '#b490ff', boldColor: '#b490ff', h1Color: '#e2d9f3', h2Color: '#e2d9f3', h3Color: '#e2d9f3' },
+    theme: { textColor: '#c4b8dd', backgroundColor: '#1a1721', accentColor: '#b490ff', boldColor: '#b490ff', highlightColor: '#413559', h1Color: '#e2d9f3', h2Color: '#e2d9f3', h3Color: '#e2d9f3' },
   },
   {
     id: 'ntr-cyber',
     label: '赛博朋克',
-    theme: { textColor: '#333333', backgroundColor: '#ffffff', accentColor: '#00ffaa', boldColor: '#ff00ff', h1Color: '#ff00ff', h2Color: '#ff00ff', h3Color: '#ff00ff' },
+    theme: { textColor: '#333333', backgroundColor: '#ffffff', accentColor: '#00ffaa', boldColor: '#ff00ff', highlightColor: '#bfffea', h1Color: '#ff00ff', h2Color: '#ff00ff', h3Color: '#ff00ff' },
   },
   {
     id: 'ntr-forest',
     label: '森林清晨 (深)',
-    theme: { textColor: '#e8f5e9', backgroundColor: '#1a2420', accentColor: '#2ecc71', boldColor: '#2ecc71', h1Color: '#2ecc71', h2Color: '#2ecc71', h3Color: '#2ecc71' },
+    theme: { textColor: '#e8f5e9', backgroundColor: '#1a2420', accentColor: '#2ecc71', boldColor: '#2ecc71', highlightColor: '#1f4e34', h1Color: '#2ecc71', h2Color: '#2ecc71', h3Color: '#2ecc71' },
   },
   {
     id: 'ntr-ocean',
     label: '深海之境 (深)',
-    theme: { textColor: '#e6f7ff', backgroundColor: '#0a192f', accentColor: '#40a9ff', boldColor: '#40a9ff', h1Color: '#40a9ff', h2Color: '#40a9ff', h3Color: '#40a9ff' },
+    theme: { textColor: '#e6f7ff', backgroundColor: '#0a192f', accentColor: '#40a9ff', boldColor: '#40a9ff', highlightColor: '#183d63', h1Color: '#40a9ff', h2Color: '#40a9ff', h3Color: '#40a9ff' },
   },
   {
     id: 'ntr-sakura',
     label: '樱花飞舞 (深)',
-    theme: { textColor: '#fff5f7', backgroundColor: '#1f1a1d', accentColor: '#ff69b4', boldColor: '#ff69b4', h1Color: '#ffb6c1', h2Color: '#ffb6c1', h3Color: '#ffb6c1' },
+    theme: { textColor: '#fff5f7', backgroundColor: '#1f1a1d', accentColor: '#ff69b4', boldColor: '#ff69b4', highlightColor: '#572e43', h1Color: '#ffb6c1', h2Color: '#ffb6c1', h3Color: '#ffb6c1' },
   },
   {
     id: 'ntr-starry',
     label: '星空梦境 (深)',
-    theme: { textColor: '#f0e6ff', backgroundColor: '#0d0f1a', accentColor: '#9b59b6', boldColor: '#9b59b6', h1Color: '#9370db', h2Color: '#9370db', h3Color: '#9370db' },
+    theme: { textColor: '#f0e6ff', backgroundColor: '#0d0f1a', accentColor: '#9b59b6', boldColor: '#9b59b6', highlightColor: '#312241', h1Color: '#9370db', h2Color: '#9370db', h3Color: '#9370db' },
   },
   {
     id: 'ntr-yueling',
     label: '悦灵雅棕 (深)',
-    theme: { textColor: '#ffffff', backgroundColor: '#1c1c1e', accentColor: '#c57512', boldColor: '#c57512', h1Color: '#f2f2f7', h2Color: '#f2f2f7', h3Color: '#f2f2f7' },
+    theme: { textColor: '#ffffff', backgroundColor: '#1c1c1e', accentColor: '#c57512', boldColor: '#c57512', highlightColor: '#46321b', h1Color: '#f2f2f7', h2Color: '#f2f2f7', h3Color: '#f2f2f7' },
   },
 ];
 
@@ -115,6 +115,7 @@ export const DEFAULT_SETTINGS: SmartRedSettings = {
     backgroundColor: '',
     accentColor: '',
     boldColor: '',
+    highlightColor: '',
     h1Color: '',
     h2Color: '',
     h3Color: '',
@@ -484,9 +485,17 @@ export class SmartRedSettingTab extends PluginSettingTab {
     this.colorSetting(
       containerEl,
       'Bold color',
-      'Pick a color for **bold** text; reset to inherit the body color',
+      'Pick a color for **bold** text; reset to the template default',
       () => this.plugin.settings.theme.boldColor ?? '',
       (value) => { this.plugin.settings.theme.boldColor = value; }
+    );
+
+    this.colorSetting(
+      containerEl,
+      'Highlight color',
+      'Background color for ==highlighted== text; reset to the template default',
+      () => this.plugin.settings.theme.highlightColor ?? '',
+      (value) => { this.plugin.settings.theme.highlightColor = value; }
     );
 
     this.colorSetting(

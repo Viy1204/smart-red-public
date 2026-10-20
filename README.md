@@ -1,6 +1,6 @@
 # Smart RED
 
-![Obsidian](https://img.shields.io/badge/Obsidian-7C3AED?style=flat-square) ![obsidian-version](https://img.shields.io/badge/Obsidian-%3E%3D0.15.0-7C3AED?style=flat-square) ![version](https://img.shields.io/badge/version-0.1.6-blue?style=flat-square) ![release](https://img.shields.io/github/v/release/Viy1204/smart-red-public?style=flat-square) ![license](https://img.shields.io/badge/license-MIT-blue?style=flat-square) ![typescript](https://img.shields.io/badge/TypeScript-3178C6?style=flat-square&logo=typescript&logoColor=white)
+![Obsidian](https://img.shields.io/badge/Obsidian-7C3AED?style=flat-square) ![obsidian-version](https://img.shields.io/badge/Obsidian-%3E%3D0.15.0-7C3AED?style=flat-square) ![version](https://img.shields.io/badge/version-0.1.7-blue?style=flat-square) ![release](https://img.shields.io/github/v/release/Viy1204/smart-red-public?style=flat-square) ![license](https://img.shields.io/badge/license-MIT-blue?style=flat-square) ![typescript](https://img.shields.io/badge/TypeScript-3178C6?style=flat-square&logo=typescript&logoColor=white)
 
 **Smart RED** is an Obsidian plugin that turns your Markdown notes into **Xiaohongshu (RED) style image cards** at 1080×1440px (3:4 ratio). It packs a measurement driven pagination engine, 19 card templates, image and table rendering, and one click PNG or ZIP export.
 
@@ -95,7 +95,7 @@ Smart RED paginates automatically. The first `# H1` becomes the article title in
 
 ## Page 1 title
 
-Body text with **bold**, *italic*, `inline code`, and [links](https://example.com).
+Body text with **bold**, ==highlights==, *italic*, `inline code`, and [links](https://example.com).
 
 - Bullet one
 - Bullet two
@@ -148,7 +148,11 @@ The `Custom Theme` section in settings lets you override:
 - `Text color` — body and heading color.
 - `Background color` — card background color.
 - `Accent color` — link, rule and emphasis color.
+- `Bold color` — text color for `**bold**`.
+- `Highlight color` — background color for `==highlighted text==`; can be combined as `==**bold and highlighted**==`.
 - `Paragraph spacing` — paragraph gap in px.
+
+Use the reset button next to `Bold color` or `Highlight color` to restore the template default. Both colors apply to the preview and exported images.
 
 The toolbar also provides shortcuts for body font size, chrome font size and common fonts. Start from a template, then tweak one or two variables. Changing too many colors can break the template's original feel.
 
