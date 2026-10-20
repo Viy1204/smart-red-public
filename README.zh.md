@@ -1,6 +1,6 @@
 # Smart RED
 
-![Obsidian](https://img.shields.io/badge/Obsidian-7C3AED?style=flat-square) ![obsidian-version](https://img.shields.io/badge/Obsidian-%3E%3D0.15.0-7C3AED?style=flat-square) ![version](https://img.shields.io/badge/version-0.1.5-blue?style=flat-square) ![release](https://img.shields.io/github/v/release/Viy1204/smart-red-public?style=flat-square) ![license](https://img.shields.io/badge/license-MIT-blue?style=flat-square) ![typescript](https://img.shields.io/badge/TypeScript-3178C6?style=flat-square&logo=typescript&logoColor=white)
+![Obsidian](https://img.shields.io/badge/Obsidian-7C3AED?style=flat-square) ![obsidian-version](https://img.shields.io/badge/Obsidian-%3E%3D0.15.0-7C3AED?style=flat-square) ![version](https://img.shields.io/badge/version-0.1.6-blue?style=flat-square) ![release](https://img.shields.io/github/v/release/Viy1204/smart-red-public?style=flat-square) ![license](https://img.shields.io/badge/license-MIT-blue?style=flat-square) ![typescript](https://img.shields.io/badge/TypeScript-3178C6?style=flat-square&logo=typescript&logoColor=white)
 
 > English documentation: [README.md](./README.md)
 
@@ -298,6 +298,10 @@ Smart RED 默认会尽量填满每张图：
 - **分页**: 自研 Folio.js v2 overflow-fill 算法
 
 ## 开发
+
+[smart-red-public](https://github.com/Viy1204/smart-red-public) 是开发、issue、PR 和版本发布的主仓库，后续改动统一提交到这里。
+
+发布时更新 `package.json`、`manifest.json` 和 `versions.json`，运行 `bun test`、`bun run build`，合入 `main` 后创建与 manifest 版本完全一致的 GitHub Release 标签（例如 `0.1.6`，不带 `v` 前缀），并附上 `main.js`、`manifest.json`、`styles.css`。Obsidian 插件市场已指向本仓库，后续版本通过这些 Release 分发，无需重新提交市场审核。
 
 ```bash
 # 安装
