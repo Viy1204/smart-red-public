@@ -40,6 +40,12 @@ const document = window.document;
   return el;
 };
 (window.HTMLElement.prototype as any).setAttribute = window.HTMLElement.prototype.setAttribute;
+(window.HTMLElement.prototype as any).createDiv = function (attrs?: any) {
+  return this.createEl('div', attrs);
+};
+(window.HTMLElement.prototype as any).setText = function (text: string) {
+  this.textContent = text;
+};
 
 // Mock Obsidian's setCssStyles / setCssProps helpers.
 (window.HTMLElement.prototype as any).setCssStyles = function (styles: Record<string, string>) {

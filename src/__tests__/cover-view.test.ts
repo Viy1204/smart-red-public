@@ -88,11 +88,16 @@ describe('theme presets', () => {
     }
   });
 
-  test('every preset fills the full color set', () => {
+  test('every non-default preset fills the full color set and declares a tone', () => {
     for (const preset of THEME_PRESETS) {
+      if (preset.id === 'template') {
+        expect(preset.theme).toEqual({});
+        continue;
+      }
       expect(Object.keys(preset.theme).sort()).toEqual(
         ['accentColor', 'backgroundColor', 'boldColor', 'highlightColor', 'h1Color', 'h2Color', 'h3Color', 'textColor'].sort()
       );
+      expect(preset.tone === 'light' || preset.tone === 'dark').toBe(true);
     }
   });
 });

@@ -28,6 +28,10 @@ describe("Template switching", () => {
     });
 
     expect(classNames).toEqual([
+      "sr-fresh-editorial-card",
+      "sr-data-brief-card",
+      "sr-letter-card",
+      "sr-dossier-card",
       "sr-editorial-card",
       "sr-monochrome-card",
       "sr-neo-grid-card",
@@ -53,8 +57,12 @@ describe("Template switching", () => {
   });
 
   test("ships every polished template", () => {
-    expect(templates.length).toBe(21);
+    expect(templates.length).toBe(25);
     expect(templates.map((template) => template.name)).toEqual([
+      "fresh-editorial",
+      "data-brief",
+      "letter",
+      "dossier",
       "editorial",
       "monochrome",
       "neo-grid",
@@ -85,6 +93,13 @@ describe("Template switching", () => {
       expect(template.lineHeightRatio).toBeGreaterThan(1.4);
       expect(template.backgroundColor).toMatch(/^#/);
       expect(template.styles).toContain(template.cardClassName);
+    }
+  });
+
+  test("every template has a Chinese description for the picker", () => {
+    for (const template of templates) {
+      expect(template.description).toBeTruthy();
+      expect(template.description).toMatch(/[一-鿿]/);
     }
   });
 });
@@ -121,7 +136,7 @@ describe("renderAllCards", () => {
     const bottom = shadow.querySelector(".card-chrome.bottom");
 
     expect(hint).not.toBeNull();
-    expect(hint!.textContent).toContain("继续");
+    expect(hint!.textContent).toContain("接下页");
     expect(bottom?.contains(hint!)).toBe(true);
   });
 

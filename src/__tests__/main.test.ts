@@ -6,9 +6,31 @@ describe("SmartRedPlugin.loadSettings", () => {
     const plugin = new SmartRedPlugin({} as any);
     plugin.loadData = async () => null as any;
     await plugin.loadSettings();
-    expect(plugin.settings.template).toBe("editorial");
+    expect(plugin.settings.template).toBe("fresh-editorial");
     expect(plugin.settings.headingLevel).toBe("h2");
     expect(plugin.settings.fontSize).toBe(31);
+  });
+
+  it("marks legacy custom colors on brand templates as a custom palette", async () => {
+    const plugin = new SmartRedPlugin({} as any);
+    plugin.loadData = async () => ({
+      template: "claude",
+      theme: { textColor: "#ffffff", backgroundColor: "#000000" },
+    } as any);
+    await plugin.loadSettings();
+
+    expect(plugin.settings.paletteId).toBe("custom");
+  });
+
+  it("keeps design templates on their own palette despite legacy colors", async () => {
+    const plugin = new SmartRedPlugin({} as any);
+    plugin.loadData = async () => ({
+      template: "data-brief",
+      theme: { textColor: "#ffffff", backgroundColor: "#000000" },
+    } as any);
+    await plugin.loadSettings();
+
+    expect(plugin.settings.paletteId).toBe("template");
   });
 
   it("preserves saved bold colors and defaults highlight color for older settings", async () => {

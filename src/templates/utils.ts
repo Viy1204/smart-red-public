@@ -4,6 +4,10 @@ import type { PaginationDecision } from "../pagination-engine";
 import type { CoverRenderContext, TemplateRenderContext } from "./types";
 
 export type TemplateId =
+  | "fresh-editorial"
+  | "data-brief"
+  | "letter"
+  | "dossier"
   | "editorial"
   | "monochrome"
   | "neo-grid"
@@ -253,7 +257,7 @@ export function renderChrome(
     ${showFooter ? `
     <div class="card-chrome bottom">
       <span>${escapeHtml(footer)}</span>
-      ${page.hasContinuation ? `<span class="continuation-hint">继续阅读 / next card</span>` : `<span></span>`}
+      ${page.hasContinuation ? `<span class="continuation-hint">未完 · 接下页</span>` : `<span></span>`}
       <span>${pageNo}</span>
     </div>
     ` : ""}
@@ -284,6 +288,74 @@ function effectiveTitleLength(title: string): number {
     (sum, ch) => sum + (/[⺀-鿿豈-﫿＀-￯]/.test(ch) ? 1 : 0.55),
     0
   );
+}
+
+// Split at word boundaries so a cover title does not break inside a Chinese
+// compound ("空 / 间"). Intl.Segmenter is available in Obsidian's Chromium and
+// in the test runtime; per-character splitting is the fallback.
+function titleWords(title: string): string[] {
+  const Segmenter = (Intl as unknown as {
+    Segmenter?: new (
+      locale: string,
+      options: { granularity: string }
+    ) => { segment: (input: string) => Iterable<{ segment: string }> };
+  }).Segmenter;
+  if (Segmenter) {
+    const segments = new Segmenter("zh", { granularity: "word" }).segment(title);
+    return Array.from(segments, (part) => part.segment).filter(Boolean);
+  }
+  return Array.from(title);
+}
+
+const forbiddenLineStart = /^[，。！？：；、）】」』”’…—的了着过是在和与而但就也都把被给让对从向为以于]/;
+const forbiddenLineEnd = /[（【「『“‘]$/;
+
+export function coverTitleLines(title: string, availWidth = 920): string[] {
+  const text = title.trim();
+  if (!text) return [""];
+  const total = Math.max(1, effectiveTitleLength(text));
+  const fontSize = coverTitleFontSize(text, availWidth);
+  const maxPerLine = Math.max(1, Math.floor(availWidth / fontSize));
+  const targetLines = Math.min(3, Math.max(1, Math.ceil(total / maxPerLine)));
+  if (targetLines === 1) return [text];
+
+  const words = titleWords(text);
+  const target = total / targetLines;
+  const lines: string[] = [];
+  let current = "";
+  let currentLength = 0;
+  for (const word of words) {
+    const wordLength = effectiveTitleLength(word);
+    const wouldBe = currentLength + wordLength;
+    if (current && wouldBe > target + 1.2 && lines.length < targetLines - 1) {
+      lines.push(current.trimEnd());
+      current = word.trimStart();
+      currentLength = wordLength;
+    } else {
+      current += word;
+      currentLength = wouldBe;
+    }
+  }
+  if (current.trim()) lines.push(current.trim());
+
+  for (let index = 1; index < lines.length; index += 1) {
+    if (
+      forbiddenLineStart.test(lines[index]) &&
+      lines[index - 1] &&
+      effectiveTitleLength(lines[index - 1]) + 1 <= maxPerLine
+    ) {
+      lines[index - 1] += lines[index][0];
+      lines[index] = lines[index].slice(1);
+    }
+  }
+  for (let index = 0; index < lines.length - 1; index += 1) {
+    if (forbiddenLineEnd.test(lines[index])) {
+      const last = lines[index].slice(-1);
+      lines[index] = lines[index].slice(0, -1);
+      lines[index + 1] = last + lines[index + 1];
+    }
+  }
+  return lines.filter((line) => line.length > 0);
 }
 
 // Formula-first size so headless environments (happy-dom measures 0) and the
@@ -357,12 +429,19 @@ function renderCoverProfile(context?: TemplateRenderContext): string {
 
 export function layoutTitleCover(el: HTMLElement, ctx: CoverRenderContext): void {
   const title = (ctx.title || "").trim() || "Smart RED";
-  const fontSize = coverTitleFontSize(title);
+  const availWidth =
+    typeof ctx.sidePadding === "number" && ctx.sidePadding > 0
+      ? Math.max(320, 1080 - 2 * ctx.sidePadding)
+      : 920;
+  const fontSize = coverTitleFontSize(title, availWidth);
+  const titleHtml = coverTitleLines(title, availWidth)
+    .map((line) => escapeHtml(line))
+    .join("<br />");
   const profile = ctx.showAuthor !== false ? renderCoverProfile(ctx) : "";
   const html = `
     <div class="cover-flow">
       <div class="cover-title-box">
-        <h1 class="cover-title" style="font-size: ${fontSize}px">${escapeHtml(title)}</h1>
+        <h1 class="cover-title" style="font-size: ${fontSize}px">${titleHtml}</h1>
         <div class="cover-underline"></div>
       </div>
       ${profile}

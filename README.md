@@ -1,334 +1,187 @@
 # Smart RED
 
-![Obsidian](https://img.shields.io/badge/Obsidian-7C3AED?style=flat-square) ![obsidian-version](https://img.shields.io/badge/Obsidian-%3E%3D0.15.0-7C3AED?style=flat-square) ![version](https://img.shields.io/badge/version-0.1.7-blue?style=flat-square) ![release](https://img.shields.io/github/v/release/Viy1204/smart-red-public?style=flat-square) ![license](https://img.shields.io/badge/license-MIT-blue?style=flat-square) ![typescript](https://img.shields.io/badge/TypeScript-3178C6?style=flat-square&logo=typescript&logoColor=white)
+![Obsidian](https://img.shields.io/badge/Obsidian-%3E%3D0.15.0-7C3AED?style=flat-square) ![version](https://img.shields.io/badge/version-0.3.0-blue?style=flat-square) ![release](https://img.shields.io/github/v/release/Viy1204/smart-red-public?style=flat-square) ![license](https://img.shields.io/badge/license-MIT-blue?style=flat-square)
 
-**Smart RED** is an Obsidian plugin that turns your Markdown notes into **Xiaohongshu (RED) style image cards** at 1080×1440px (3:4 ratio). It packs a measurement driven pagination engine, 19 card templates, image and table rendering, and one click PNG or ZIP export.
+**Smart RED** turns Obsidian Markdown notes into **Xiaohongshu (RED) image cards** at 1080 × 1440 pixels (3:4). Preview beside your note, choose from 25 templates, adjust typography and colors, then copy or export PNG images.
 
-> 中文说明见 [README.zh.md](./README.zh.md)。
+> 中文说明：[README.zh.md](./README.zh.md) · Release history: [CHANGELOG.md](./CHANGELOG.md)
 
-## Demo
+Smart RED requires desktop Obsidian. It does not upload or publish your notes.
 
-Write on the left, preview cards on the right. Flip pages, lock the preview, switch templates, and export PNG or ZIP with one click.
+## What's new in 0.3.0
 
-## Features
+- Four new templates: 清爽编辑版 (Fresh Editorial), 数据简报 (Data Brief), 手写信笺 (Letter), and 档案夹 (Dossier). All 21 existing templates remain available.
+- A palette picker with light and dark groups, color previews, and a template-default option.
+- Side-padding controls and an optional paragraph widow guard, enabled by default.
+- Comfortable and Compact reading presets for Fresh Editorial, with separate body and heading fonts.
+- Chinese template names, settings, and toolbar labels.
 
-- **Smart pagination engine** — Greedy overflow-fill pagination driven by real template DOM measurements. Paragraphs are split line by line to eliminate bottom whitespace and premature page breaks. Waits for fonts to load before measuring.
-- **CJK typography engine** — Automatic line breaking for Chinese, Japanese and Korean text with Kinsoku shori rules (prohibited line starts/ends) and smooth mixed CJK/Latin layout.
-- **19 polished templates**
-  - Chinese long-form series
-    - `Editorial` — premium editorial paper texture for tech commentary and deep long reads
-    - `Monochrome` — black-and-white research report style for dense information
-    - `Neo Grid` — design grid with bold highlights for structured opinions
-    - `Warm Zine` — warm handmade zine for personal writing
-    - `Noir Magazine` — dark magazine style for night and emotionally strong content
-    - `Ivory Essay` / `Red Ledger` / `Slate Journal` / `Pearl Magazine` / `Ink Report` — magazine, report and journal backgrounds tuned for Chinese long reads
-  - Brand series (colors and fonts inspired by [awesome-design-md](https://github.com/VoltAgent/awesome-design-md))
-    - `Claude` — warm cream paper + serif headings + coral accent
-    - `MiniMax` — pure white near-black + corner multi-color gradients
-    - `xAI` — near-black canvas + sunset gradient + monospaced all-caps header
-    - `Lovable` — warm parchment + rounded humanist fonts + warm gradients and rounded corners
-    - `Notion` — tri-color pastel title blocks + gray callouts + colorful tags
-    - `Figma` — black-and-white editor + neon highlight headings + soft color blocks
-    - `Apple` — oversized tight-tracking heading + generous whitespace + Action Blue
-    - `The Verge` — near-black + acid mint/ultra-violet + extra bold all-caps heading
-    - `Wired` — black-and-white magazine + tall serif masthead + drop cap
-- **Markdown visual rendering** — bold, italic, links, inline code, strikethrough, task lists, blockquotes, code blocks, image captions and table styles
-- **Image and table support** — Markdown images are preloaded and measured by real dimensions; broken images are skipped by default to avoid large empty placeholders
-- **Export pipeline** — copy current page, single PNG (default 2160×2880px, 2x Retina) or ZIP batch export. Uses html-to-image as primary renderer with html2canvas fallback, and blocks obviously blank images
-- **Settings** — template switching, heading split level, font size, chrome font size, avatar/nickname/footer, theme colors, export scale
-- **Live preview** — 300ms debounce, requestAnimationFrame rendering, edit lock/unlock
+## Install or update
 
-## Installation
+### Obsidian Community plugins
 
-### Manual install
+In **Settings → Community plugins → Browse**, search for **Smart RED**, install it, and enable it. Existing users can use **Check for updates** in Community plugins and update Smart RED.
 
-1. Download `main.js`, `manifest.json` and `styles.css` from [Releases](https://github.com/Viy1204/smart-red-public/releases)
-2. Copy them into your vault's `.obsidian/plugins/smart-red/` folder
-3. Restart Obsidian and enable the plugin under Settings → Community plugins
+The community entry points to [Viy1204/smart-red-public](https://github.com/Viy1204/smart-red-public). Updates are distributed through this repository's GitHub Releases; an existing plugin does not need a new community submission for each release.
 
-### Build from source
+### Manual installation
 
-```bash
-git clone https://github.com/Viy1204/smart-red-public
-cd smart-red-public
-bun install
-bun run build
-```
+1. Download `main.js`, `manifest.json`, and `styles.css` from the [latest release](https://github.com/Viy1204/smart-red-public/releases/latest).
+2. Put the three files directly in `<vault>/.obsidian/plugins/smart-red/`.
+3. Reload Obsidian and enable **Smart RED** under Community plugins.
 
-Then copy `main.js`, `manifest.json` and `styles.css` to the plugin folder.
+When updating manually, keep your existing `data.json`: it stores your settings. Do not replace the entire plugin folder with an empty folder.
 
-## Usage
+### Upgrading from 0.1.7 or the design test build
 
-### 1. Open the preview
+The production plugin ID remains `smart-red`. Existing production settings, including the selected template, profile, cover, font sizes, and custom colors, are retained. New installations start with Fresh Editorial and its Comfortable reading preset; upgrades keep their saved template.
 
-1. Open a Markdown note in Obsidian.
-2. Click the Smart RED ribbon icon, or open the command palette and run `Smart RED: Open preview`.
-3. The right panel renders the note as RED-style image cards.
+The separately installed **Smart RED 排版测试版** uses the ID `smart-red-design-test`. Its settings remain separate and are not imported automatically. After installing the production version, select the same template and settings if desired, then disable the test plugin to avoid two preview panels. Keep a copy of the test plugin's `data.json` if you want to retain those settings.
 
-If the panel is empty, make sure a `.md` note is active and contains body text.
+## Use Smart RED
 
-### 2. Toolbar
+### Open the preview
 
-From left to right:
+Open a Markdown note, then click the Smart RED ribbon icon or run **Smart RED: 打开预览** from the command palette. Cards appear in the preview panel. If it is empty, make sure a Markdown note containing text is open.
 
-| Button | Action |
-|--------|--------|
-| `Lock` | Lock the preview so editing no longer refreshes it. Click again to unlock. |
-| `‹` / `›` | Previous / next page. |
-| `1/8` | Current page / total pages. |
-| Template dropdown | Switch card template. Auto-saved. |
-| `A-` / `A+` | Decrease / increase body font size. |
-| `H-` / `H+` | Decrease / increase chrome font size (header, footer, page number). |
-| Font dropdown | Quick switch between default, system sans, Source Han, LXGW WenKai, HarmonyOS, Alibaba PuHuiTi, serif/fangsong or monospace fonts. |
-| `Copy` | Copy current page PNG to clipboard. |
-| `PNG` | Download current page PNG. |
-| `ZIP` | Download all pages as a ZIP. |
+### Toolbar
 
-Typical workflow: write on the left, preview on the right, then `Copy` the current page or `ZIP` the whole note.
+The interface uses Chinese labels. The controls below appear in the preview toolbar.
 
-### 3. Recommended note format
+| Control | Action |
+| --- | --- |
+| 锁定 / 已锁定 | Freeze the current preview or resume live updates. |
+| 封面 | Toggle the title cover; the active state is highlighted. |
+| ‹ / › and page count | Move between cards, including the cover. |
+| Template menu | Choose a template; the selection is saved. |
+| 配色 | Open the palette picker. |
+| 阅读 | Fresh Editorial only: choose 舒适 (Comfortable) or 紧凑 (Compact). |
+| A− / A+ | Adjust body text size. |
+| H− / H+ | Adjust header and footer text size. |
+| 边− / 边+ | Adjust left and right padding in 2-pixel steps. |
+| Font menu | Select a body font available on your system. |
+| 复制 | Copy the current card as a PNG image. |
+| PNG | Save the current card. |
+| ZIP | Save every card as PNG files in a ZIP archive. |
 
-Smart RED paginates automatically. The first `# H1` becomes the article title in the top-right chrome; if there is no H1, the Markdown file name is used.
+### Write a note
 
 ```markdown
-# Main title for this set of cards
+# Article title
 
-## Page 1 title
+## A section
 
-Body text with **bold**, ==highlights==, *italic*, `inline code`, and [links](https://example.com).
+Body text with **bold**, ==highlights==, ==**both**==, *italic*,
+`inline code`, and [links](https://example.com).
 
-- Bullet one
-- Bullet two
-- [ ] A task item
+- A point
+- [ ] A task
+
+> A quotation
 
 ---
 
 This starts a new card.
 
-## Second section
+| Item | Detail |
+| --- | --- |
+| A | Tables are rendered too. |
 
-> Blockquotes are rendered as magazine pull quotes.
-
-| Item | Description |
-|------|-------------|
-| A    | Tables get styled too |
-
-![Image caption](https://example.com/image.png)
+![Image description](image.png)
 ```
 
-### 4. Pagination rules
+The first H1 supplies the document title; otherwise, Smart RED uses the file name. When a cover is enabled, its title can be hidden from the first body card to avoid duplication.
 
-Smart RED tries to fill every card:
+### Pagination and spacing
 
-- Headings (`#`, `##`, ...) are structural; only the first H1 also fills the top-right title slot.
-- If a page is too long, the plugin paginates based on real rendered height and keeps a small footer safe zone.
-- A single line `---` forces a new card. The horizontal rule itself is not rendered.
-- Two or more consecutive blank lines add extra vertical space: one blank line is a normal paragraph break, each extra blank line adds one paragraph gap (ignored at page top/bottom).
+Smart RED waits for fonts and image dimensions, measures content in the selected template, and fills cards automatically. Headings stay together. Long paragraphs and code blocks can continue onto another card.
 
-### 5. Profile and footer
+- A line containing only `---` forces a new card and is not drawn as a rule.
+- One blank line separates paragraphs. Additional blank lines add vertical spacing, which is dropped at page boundaries.
+- **避免孤行** (avoid widows) is enabled by default. It prevents a split paragraph from leaving only its final line on the next card, which can leave more space at the bottom of the preceding card. Turn it off to favor filling each card.
+- **左右边距** (side padding) in settings accepts `0` for each template's default padding. The toolbar adjusts a custom padding value; cover titles reflow to the available width.
+- Oversized tables and indivisible list items can still exceed a fixed card. Split those content blocks in the source note.
 
-In Obsidian Settings → Community plugins → Smart RED, configure:
+### Templates and palettes
 
-- `Avatar` — URL or vault path to an avatar image.
-- `Nickname` — creator name shown in the card header.
-- `Subtitle` — certification, role or short description.
-- `Footer` — bottom-left text such as a public account or series name. Defaults to `Smart RED`.
-- `Show header` / `Show footer` — toggle chrome visibility.
-- `Round avatar` — circular crop.
+| Template shown in the interface | ID | Suitable for |
+| --- | --- | --- |
+| 清爽编辑版 | `fresh-editorial` | Long reads, cool gray body cards, blue-gray title covers; default for new installations. |
+| 数据简报 | `data-brief` | Analysis, reviews, tables, green accents, and key-point callouts. |
+| 手写信笺 | `letter` | Stories and letters, warm paper, serif text, and first-line indents. |
+| 档案夹 | `dossier` | Case studies, a red side rule, and file-style headers. |
+| 编辑纸 / 黑白报告 / 新网格 | `editorial` / `monochrome` / `neo-grid` | Editorial, report, and grid layouts. |
+| 暖调小志 / 深夜杂志 / 象牙随笔 | `warm-zine` / `noir-magazine` / `ivory-essay` | Personal writing, dark magazine pages, and restrained essays. |
+| 红册 / 石板手记 / 珍珠杂志 / 墨色报告 | `red-ledger` / `slate-journal` / `pearl-magazine` / `ink-report` | Reviews, journals, narratives, and dense reports. |
+| 暖阳文艺 / 备忘录 | `warm-sun` / `memo` | Warm serif pages and a memo layout. |
+| Claude / MiniMax / xAI / Lovable / Notion / Figma / Apple / The Verge / Wired | `claude` / `minimax` / `xai` / `lovable` / `notion` / `figma` / `apple` / `the-verge` / `wired` | Nine brand-inspired layouts. |
 
-If no avatar or nickname is set, templates fall back to a default magazine header.
+Choose **配色** to preview and apply a color scheme. Light and dark palettes are grouped, with the group matching the current template shown first. Selecting a palette of the opposite tone shows a warning but remains possible. Switching templates resets a palette whose tone does not match the new template to **默认配色** (template default).
 
-### 6. Templates and themes
+The four new templates use their own colors by default and can be recolored through the palette picker or the palette preset menu in settings. Their manual color controls are hidden. The other templates retain their saved custom colors and offer body, background, accent, bold, highlight, and H1–H3 overrides in settings. The bold and highlight reset buttons restore those individual colors to their defaults. Preview and export share these colors.
 
-Built-in 19 templates cover editorial, magazine, zine and brand styles. See the [Templates](#templates) section below for a quick guide.
+### Fresh Editorial reading controls
 
-The `Custom Theme` section in settings lets you override:
+| Preset | Body size | Line height | Paragraph gap |
+| --- | --- | --- | --- |
+| 舒适 / Comfortable | 40 px | 1.7 | 28 px |
+| 紧凑 / Compact | 36 px | 1.7 | 24 px |
 
-- `Font family` — custom CSS font stack.
-- `Text color` — body and heading color.
-- `Background color` — card background color.
-- `Accent color` — link, rule and emphasis color.
-- `Bold color` — text color for `**bold**`.
-- `Highlight color` — background color for `==highlighted text==`; can be combined as `==**bold and highlighted**==`.
-- `Paragraph spacing` — paragraph gap in px.
+Sizes refer to the 1080 × 1440 canvas. Body size can be adjusted from 28 to 52 px; heading sizes scale with it. Header and footer text defaults to 28 px. Changing body size or paragraph spacing outside a preset shows **自定义** (custom); choosing a preset again resets those two values and keeps the fonts.
 
-Use the reset button next to `Bold color` or `Highlight color` to restore the template default. Both colors apply to the preview and exported images.
+Fresh Editorial stores its reading settings separately from the other templates. Its body and heading fonts can be set independently in settings, using CSS font stacks. The toolbar font menu changes its body font. Chinese fonts are resolved from installed system fonts rather than downloaded; device fonts can change line breaks and page counts.
 
-The toolbar also provides shortcuts for body font size, chrome font size and common fonts. Start from a template, then tweak one or two variables. Changing too many colors can break the template's original feel.
+### Profile, cover, and export
 
-### 7. Export tips
+Configure your avatar, nickname, handle, subtitle, footer, and their visibility in **Settings → Smart RED**. Cover settings control the title cover, author information, and duplicate first-heading removal.
 
-- `Copy` — fastest way to share the current page.
-- `PNG` — save the current page.
-- `ZIP` — export the whole note.
-- Default export scale is `2x` (2160×2880), good for RED posting. Change to `1x` in settings for smaller files.
+Use **复制** to copy one card, **PNG** to save it, or **ZIP** for the entire note. The default export scale is 2×, producing 2160 × 2880 images. A higher export scale increases resolution without changing the layout.
 
-### 8. FAQ
+## Supported content
 
-**Exported image is black or blank?**
+Smart RED supports H1–H6, bold, highlights, italic, strikethrough, links and wikilink labels, inline code, lists, task lists, quotations, fenced code, images, and tables. Relative image paths are resolved from the current note; images that fail to load are skipped. Frontmatter, Obsidian callouts/embeds, Mermaid, and math are not rendered as their native Obsidian blocks.
 
-Reload the plugin and use the latest build. Current versions render with a real light DOM for export and reject obviously blank images.
+## Troubleshooting
 
-**Copy does nothing?**
+**Copy or PNG shows a failure, or the image is blank.** Reload the latest plugin build and try a short note with a built-in template. Copy also depends on your operating system's clipboard. Include the console error after `Smart RED: copy failed` or `Smart RED: export failed`, a minimal note, and Obsidian debug information when reporting a failure.
 
-Some systems or Obsidian environments restrict clipboard image writes. Use `PNG` instead.
+[Issue 11](https://github.com/Viy1204/smart-red-public/issues/11) tracks an environment-specific Copy/PNG failure reported on 0.1.7. Its cause has not been established; 0.3.0 does not claim to resolve it.
 
-**Why don't links show raw Markdown?**
+**A font looks different on another device.** Most CJK fonts use system fallbacks. Install the intended font or choose a font already available on both systems. The brand templates bundle subsets of Inter, Hanken Grotesk, Playfair Display, and Source Serif 4; see [LICENSE-FONTS](./LICENSE-FONTS).
 
-`[text](link)`, bare URLs and `[[wikilink|alias]]` are rendered as readable link text, not raw Markdown.
+**The page has more bottom space after updating.** The new widow guard can move a line to keep a paragraph ending together. Disable **避免孤行** if you prefer denser cards. The final card can remain short.
 
-**Image not showing?**
 
-Use reachable network images or local paths Obsidian can read. Relative paths are resolved from the current Markdown file. Broken images are skipped.
+## Development and release
 
-**Too much text on one page?**
-
-The plugin waits for fonts and measures real DOM height, prioritizing no clipped text while filling the card. Use `---` to force a new card.
-
-### Supported Markdown syntax
-
-| Syntax | Supported | Notes |
-|--------|-----------|-------|
-| `# H1` ~ `###### H6` | ✅ | Headings do not split across pages |
-| `**bold**` / `*italic*` | ✅ | |
-| `- list` / `1. list` | ✅ | |
-| `> quote` | ✅ | |
-| `` `code` `` | ✅ | |
-| ` ``` ` code block | ✅ | Continuation marker `⤻` added when split |
-| `![alt](url)` image | ✅ | Layout uses real dimensions; broken images skipped |
-| `\| table \|` | ✅ | Tables do not split; overflow noted as "continued" |
-| `[[wikilink]]` | ✅ | Rendered as link text |
-| `---` page break | ✅ | Not rendered as a line |
-| Consecutive blank lines | ✅ | 2+ blank lines add extra spacing |
-| `~~strikethrough~~` | ✅ | |
-| `- [ ]` task list | ✅ | |
-| Callouts / Embeds | ❌ | Stripped |
-| Mermaid / Math | ❌ | Stripped |
-| Frontmatter | ❌ | Stripped |
-
-## Templates
-
-### Editorial
-Default template. Warm paper, serif headings, fine grid and magazine page numbers. Good for tech commentary, workplace observations and deep long reads.
-
-### Monochrome
-Ivory paper black-and-white layout with strong borders and research-report feel. Good for dense, serious, long-paragraph content.
-
-### Neo Grid
-Blue grid, neon highlights, bold headings. Good for punchy statements, structured opinions and more designed expressions.
-
-### Warm Zine
-Yellow paper, craft texture, warm accents. Good for personal writing, essays and content that should not feel corporate.
-
-### Noir Magazine
-Dark magazine style with pink highlights and night-editorial mood. Good for strong emotions, night reading and commentary.
-
-### Ivory Essay
-Clean ivory paper, thin borders and understated emphasis. Good for readable Chinese long reads.
-
-### Red Ledger
-Light red background with vertical ledger lines. Good for reviews, checklists, opinions and series.
-
-### Slate Journal
-Calm gray-green journal style. Good for workplace, organization and research content.
-
-### Pearl Magazine
-Soft magazine feel, light decoration, low noise. Good for more refined narrative content.
-
-### Ink Report
-Restrained black-and-white report style with clear borders. Good for dense information and serious expression.
-
-### Claude
-Warm cream paper, serif headings, coral accent and black ray dots. Humanist editorial feel for tech commentary and warm long reads.
-
-### MiniMax
-Pure white canvas, near-black headings, corner multi-color gradient spheres. Clean AI infrastructure feel for product launches and structured opinions.
-
-### xAI
-Near-black canvas, bottom sunset/twilight gradient, monospaced all-caps header. Engineering-cool and futuristic. Good for punchy short takes (long dark reads can feel heavy).
-
-### Lovable
-Warm parchment, rounded humanist fonts, warm gradients and rounded corners everywhere. Friendly handmade feel for personal writing and product stories.
-
-### Notion
-Tri-color rotating pastel title blocks, gray callouts, colorful tag pills. Product workspace feel for tutorials, checklists and knowledge organization.
-
-### Figma
-Black-and-white editor skeleton, neon lemon highlight headings, soft color blocks. Technical yet playful. Good for design opinions and structured expression.
-
-### Apple
-Oversized tight-tracking heading, generous whitespace, single Action Blue and image shadows. Launch poster feel for minimalist statements and product narratives.
-
-### The Verge
-Near-black background, acid mint/ultra-violet accents, extra bold all-caps heading and mint quote blocks. Tech tabloid nightclub feel for strong-opinion content (Chinese headings are not uppercased).
-
-### Wired
-Black-and-white magazine, tall serif masthead, drop cap and black thick divider bars. Print magazine feel for in-depth reports and long reads.
-
-## Tech stack
-
-- **Language**: TypeScript
-- **Build**: esbuild
-- **Tests**: Bun test + happy-dom
-- **Rendering**: Shadow DOM preview isolation, light DOM off-screen export, html-to-image@1.11.11, html2canvas@1.4.1 fallback
-- **Export**: fflate
-- **Typography**: @cto.af/linebreak (CJK line breaking), Kinsoku rules (strict L1 mode)
-- **Pagination**: custom Folio.js v2 overflow-fill algorithm
-
-## Development
-
-[smart-red-public](https://github.com/Viy1204/smart-red-public) is the canonical repository for development, issues, pull requests, and releases. Make future changes here.
-
-For a release, update `package.json`, `manifest.json`, and `versions.json`, then run `bun test` and `bun run build`. Merge into `main` and publish a GitHub release whose tag exactly matches the manifest version (for example, `0.1.6`, without a `v` prefix), with `main.js`, `manifest.json`, and `styles.css` attached. The Obsidian Community plugins entry already points here; existing users receive updates from these releases without a new marketplace submission.
+This public repository is the canonical home for development, issues, pull requests, and releases.
 
 ```bash
-# Install
-bun install
+git clone https://github.com/Viy1204/smart-red-public
+```
 
-# Dev mode (watch)
-bun run dev
+```bash
+cd smart-red-public
+```
 
-# Production build
-bun run build    # outputs main.js
+```bash
+bun install --frozen-lockfile
+```
 
-# Test
+```bash
 bun test
-
-# Test (watch)
-bun test --watch
 ```
 
-### Project structure
-
-```
-src/
-├── main.ts                    # plugin entry + registration
-├── view.ts                    # RedView (Obsidian ItemView)
-├── settings.ts                # settings tab
-├── types.ts                   # core types (BlockType, SemanticBlock)
-├── cjk-line-breaker.ts        # CJK line breaking + Kinsoku rules
-├── clipboard.ts               # copy current page PNG to clipboard
-├── markdown-parser.ts         # Markdown → semantic block tree
-├── pagination-engine.ts       # overflow-fill pagination engine
-├── section-splitter.ts        # continuous pagination + legacy section tool compat
-├── template-renderer.ts       # Shadow DOM template renderer
-├── export-pipeline.ts         # PNG/ZIP export pipeline
-├── templates/
-│   ├── types.ts               # template interfaces
-│   ├── gallery.ts             # 19 templates
-│   └── utils.ts               # Markdown inline rendering and template utilities
-└── __tests__/                 # test files
+```bash
+bun run build
 ```
 
-## Design decisions
+Development watch mode is `bun run dev`. Production builds generate `main.js` and `styles.css`; edit `styles.css.base` and the template source rather than the generated CSS.
 
-- **Shadow DOM preview isolation** — preview uses Shadow DOM so template styles do not pollute Obsidian global styles.
-- **Light DOM off-screen export** — PNG, ZIP and Copy use plain DOM export to avoid Shadow DOM hosts being captured as black boxes by screenshot libraries.
-- **html-to-image@1.11.11 pinned** — v1.11.13+ has a regression bug.
-- **No AI for pagination** — smart pagination is the core differentiator.
-- **Fixed 1080×1440 output** — native RED ratio.
-- **CSS variable theme overrides** — default templates stay polished; custom themes only override key variables.
+For a release, update `package.json`, `manifest.json`, and `versions.json`, update this documentation and [CHANGELOG.md](./CHANGELOG.md), run the tests and build, then merge into `main`. Create a tag exactly matching `manifest.version`, such as `0.3.0` without a `v` prefix, and publish a non-draft, non-prerelease GitHub Release with `main.js`, `manifest.json`, and `styles.css` as individual assets. Verify that the downloaded assets match the tested build. No new community registration PR is needed for an ordinary version update.
+
+The plugin uses TypeScript, esbuild, Bun test with happy-dom, `@cto.af/linebreak`, `html-to-image@1.11.11`, `html2canvas`, and `fflate`. Preview styles are isolated in Shadow DOM; export renders into off-screen light DOM. Pagination relies on measured DOM height; DOM mocks alone cannot verify actual page layout.
 
 ## License
 
-MIT
+[MIT](./LICENSE). Bundled font notices: [LICENSE-FONTS](./LICENSE-FONTS).

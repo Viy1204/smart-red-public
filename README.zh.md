@@ -1,361 +1,185 @@
 # Smart RED
 
-![Obsidian](https://img.shields.io/badge/Obsidian-7C3AED?style=flat-square) ![obsidian-version](https://img.shields.io/badge/Obsidian-%3E%3D0.15.0-7C3AED?style=flat-square) ![version](https://img.shields.io/badge/version-0.1.7-blue?style=flat-square) ![release](https://img.shields.io/github/v/release/Viy1204/smart-red-public?style=flat-square) ![license](https://img.shields.io/badge/license-MIT-blue?style=flat-square) ![typescript](https://img.shields.io/badge/TypeScript-3178C6?style=flat-square&logo=typescript&logoColor=white)
+![Obsidian](https://img.shields.io/badge/Obsidian-%3E%3D0.15.0-7C3AED?style=flat-square) ![version](https://img.shields.io/badge/version-0.3.0-blue?style=flat-square) ![release](https://img.shields.io/github/v/release/Viy1204/smart-red-public?style=flat-square) ![license](https://img.shields.io/badge/license-MIT-blue?style=flat-square)
 
-> English documentation: [README.md](./README.md)
+将 Obsidian Markdown 笔记转换成 **1080 × 1440 像素、3:4 比例的小红书图文卡片**。在笔记旁实时预览，从 25 套模板中选择样式，调整字体、配色与留白，再复制或导出 PNG。
 
-将 Obsidian 笔记一键转换为**小红书风格图片卡片**（1080×1440px，3:4 比例）的插件。自动分页、多模板、支持图片和表格渲染、批量导出。
+> English：[README.md](./README.md) · 版本记录：[CHANGELOG.md](./CHANGELOG.md)
 
-## 效果
+Smart RED 适用于桌面版 Obsidian，不负责上传或发布笔记。
 
-左侧写笔记，右侧实时预览卡片效果——支持翻页、锁定编辑、切换模板、一键导出 PNG（单张或 ZIP 打包）。
+## 0.3.0 更新
 
-## 功能
+- 新增「清爽编辑版」「数据简报」「手写信笺」「档案夹」，原有 21 套模板全部保留。
+- 新增配色面板，按深浅分组预览颜色，支持恢复模板默认配色。
+- 新增左右边距控制，以及默认开启的「避免孤行」。
+- 清爽编辑版提供舒适、紧凑两档阅读设置，标题与正文字体可分别配置。
+- 模板名称、设置项和工具栏统一为中文。
 
-- **智能分页引擎** — 测量驱动的单管线分页：每一页都用真实模板 DOM 测量候选内容高度后贪心填满，段落按行二分切分，从根上消除底部留白和内容提前跳页。分页前会等待字体加载。
-- **CJK 排版引擎** — 中日韩文字自动换行，Kinsoku 禁则处理（行首禁则、行尾禁则），中英文混排流畅。
-- **19 套精品模板**
-  - 中文长文系列
-    - `Editorial` — 高级编辑部纸张质感，适合科技评论和深度长文
-    - `Monochrome` — 黑白研究报告风，适合高密度信息
-    - `Neo Grid` — 设计感网格和醒目标注，适合结构化观点
-    - `Warm Zine` — 温暖手作 zine，适合个人写作
-    - `Noir Magazine` — 深色杂志风，适合夜间和强情绪内容
-    - `Ivory Essay` / `Red Ledger` / `Slate Journal` / `Pearl Magazine` / `Ink Report` — 更适合中文长文的杂志、报告和手账背景
-  - 品牌系列（配色与字体参考 [awesome-design-md](https://github.com/VoltAgent/awesome-design-md)）
-    - `Claude` — 暖奶油纸 + 衬线标题 + 珊瑚强调
-    - `MiniMax` — 纯白近黑 + 角落多色渐变
-    - `xAI` — 近黑画布 + 日落渐变 + 等宽大写页眉
-    - `Lovable` — 暖羊皮纸 + 圆润字体 + 暖色渐变与圆角
-    - `Notion` — 三色 pastel 标题块 + 灰底 callout + 彩色标签
-    - `Figma` — 黑白编辑 + 荧光高亮标题 + 淡彩色块
-    - `Apple` — 超大紧字距标题 + 大留白 + Action Blue
-    - `The Verge` — 近黑 + 酸薄荷/紫外光 + 超粗大写标题
-    - `Wired` — 黑白杂志 + 高瘦衬线大字报头 + 首字下沉
-- **Markdown 视觉渲染** — 支持粗体、斜体、链接、行内代码、删除线、任务列表、引用、代码块、图片说明和表格样式
-- **图片 & 表格支持** — Markdown 图片会先预加载并按真实宽高测量；加载失败的坏图默认跳过，避免在图片卡片里留下大块空白。
-- **导出管线** — 复制当前页图片、单张 PNG（默认 2160×2880px，2x Retina）或 ZIP 批量导出，html-to-image 主渲染 + html2canvas 兜底，并拦截明显空白图
-- **设置项** — 模板切换、连续分页、工具栏调字号/字体、头像昵称、页脚文案、主题颜色、导出倍率
-- **实时预览** — 300ms debounce，requestAnimationFrame 渲染，编辑锁定/解锁
+## 安装与更新
 
-## 安装
+### Obsidian 插件市场
+
+在「设置 → 第三方插件 → 浏览」搜索 **Smart RED**，安装并启用。已安装的用户可在第三方插件页点击「检查更新」，再更新 Smart RED。
+
+社区条目指向 [Viy1204/smart-red-public](https://github.com/Viy1204/smart-red-public)。后续版本通过本仓库的 GitHub Release 分发，普通版本更新无需重新提交市场登记。
 
 ### 手动安装
 
-1. 下载 [releases](https://github.com/Viy1204/smart-red-public/releases) 中的 `main.js`、`manifest.json`、`styles.css`
-2. 复制到你的 vault 的 `.obsidian/plugins/smart-red/` 目录
-3. 重启 Obsidian，在设置 → 第三方插件中启用
+1. 从[最新 Release](https://github.com/Viy1204/smart-red-public/releases/latest) 下载 `main.js`、`manifest.json`、`styles.css`。
+2. 将三个文件直接放入 `<笔记库>/.obsidian/plugins/smart-red/`，不要多嵌套一层目录。
+3. 重载 Obsidian，在第三方插件列表启用 **Smart RED**。
 
-### 从源码构建
+手动更新时保留原有 `data.json`，它保存你的设置。不要用一个空文件夹替换整个插件目录。
 
-```bash
-git clone https://github.com/Viy1204/smart-red-public
-cd smart-red
-bun install
-bun run build
-```
+### 从 0.1.7 或排版测试版升级
 
-把 `main.js`、`manifest.json`、`styles.css` 复制到 vault 的插件目录。
+正式插件 ID 仍为 `smart-red`。原有正式版的模板、头像昵称、封面、字号和自定义颜色会继续保留。新安装默认使用「清爽编辑版」与舒适阅读档位；已有设置的用户仍使用原来选择的模板。
 
-## 使用说明
+单独安装的 **Smart RED 排版测试版** 使用 `smart-red-design-test`，设置与正式版分开保存，不会自动导入。安装正式版后，可按需选择相同模板与设置，再停用测试插件，避免出现两个预览面板。需要保留测试设置时，先备份测试目录里的 `data.json`。
 
-### 1. 打开预览
+## 使用
 
-1. 在 Obsidian 里打开一篇 Markdown 笔记。
-2. 点击左侧 Ribbon 栏里的 Smart RED 图标，或打开命令面板搜索 `Smart RED: Open Smart RED Preview`。
-3. 右侧会打开 Smart RED 预览面板，自动把当前笔记排成小红书图片卡片。
+### 打开预览
 
-如果右侧没有内容，先确认当前打开的是 `.md` 笔记，并且笔记里有正文。
+在 Obsidian 中打开一篇 Markdown 笔记，点击侧栏 Smart RED 图标，或在命令面板执行 **Smart RED：打开预览**。右侧会显示图片卡片。若面板为空，先确认有一篇包含正文的 Markdown 笔记处于打开状态。
 
-### 2. 使用顶部工具栏
+### 工具栏
 
-顶部工具栏从左到右是：
+| 控件 | 作用 |
+| --- | --- |
+| 锁定／已锁定 | 固定当前预览，或恢复跟随笔记更新。 |
+| 封面 | 开关文章标题封面，启用时按钮高亮。 |
+| ‹／› 与页码 | 翻阅卡片，封面也计入页数。 |
+| 模板下拉框 | 选择模板并保存。 |
+| 配色 | 打开配色面板。 |
+| 阅读 | 仅清爽编辑版显示，切换「舒适」「紧凑」。 |
+| A−／A+ | 调整正文字号。 |
+| H−／H+ | 调整页眉、页脚等文字的字号。 |
+| 边−／边+ | 按 2 像素调整左右边距。 |
+| 字体下拉框 | 选择本机可用的正文字体。 |
+| 复制 | 将当前卡片作为 PNG 图片写入剪贴板。 |
+| PNG | 保存当前卡片。 |
+| ZIP | 将全部卡片作为 PNG 打包导出。 |
 
-| 按钮 | 作用 |
-|------|------|
-| `Lock` | 锁定当前预览。锁定后你继续编辑笔记，右侧不会自动刷新，适合对照修改。再次点击可解锁。 |
-| `‹` / `›` | 上一页 / 下一页。 |
-| `1/8` | 当前页码 / 总页数。 |
-| 模板下拉框 | 切换卡片模板，切换后会自动保存。 |
-| `A-` / `A+` | 快速缩小或放大卡片正文字号。 |
-| `H-` / `H+` | 快速缩小或放大页眉、页脚、页码和继续阅读字号。 |
-| 字体下拉框 | 快速切换默认字体、系统黑体、思源黑体/宋体、霞鹜文楷、HarmonyOS、阿里普惠、宋体/仿宋或等宽字体；未安装主字体时会使用 fallback。 |
-| `Copy` | 复制当前页 PNG 图片到剪贴板，适合直接粘贴到聊天、飞书、微信等地方。 |
-| `PNG` | 下载当前页 PNG。 |
-| `ZIP` | 把所有页打包成 ZIP 下载。 |
-
-一般工作流是：左边写笔记，右边看预览，满意后用 `Copy` 复制当前页，或用 `ZIP` 一次导出全部页面。
-
-### 3. 推荐的笔记写法
-
-Smart RED 会自动分页。第一条 `# H1` 会作为文章标题显示在卡片右上角；如果没有 H1，会使用当前 Markdown 文件名。
+### 笔记写法
 
 ```markdown
-# 这一组图片的大标题
+# 文章标题
 
-## 第 1 页标题
+## 一个章节
 
-这里写正文。可以使用 **粗体**、==高亮==、*斜体*、`行内代码`、[链接](https://example.com)。
+正文支持 **加粗**、==高亮==、==**加粗并高亮**==、*斜体*、
+`行内代码`和[链接](https://example.com)。
 
-- 要点一
-- 要点二
-- [ ] 待办事项
+- 一条要点
+- [ ] 一项待办
+
+> 一段引用
 
 ---
 
-这里会从新的一张卡片开始。
-
-## 第 2 个 section
-
-> 引用会被排成杂志感 pull quote。
+这里从新卡片开始。
 
 | 项目 | 说明 |
-| ---- | ---- |
-| A | 表格也会有样式 |
+| --- | --- |
+| A | 表格也会渲染。 |
 
-![图片说明](https://example.com/image.png)
+![图片说明](image.png)
 ```
 
-### 4. 切图规则
+首个 H1 用作文章标题，没有 H1 时使用文件名。启用封面后，可以隐藏正文中重复的首个 H1。
 
-Smart RED 默认会尽量填满每张图：
+### 分页与留白
 
-- `#`、`##` 等标题只是正文结构，不会自动浪费一整张图；第一条 H1 同时会进入右上角标题位。
-- 如果一页内容太长，插件会基于真实渲染高度继续自动分页，并保留少量页脚安全区，避免正文被底部 chrome 裁掉。
-- 单独一行 `---` 表示"从这里开始新的一张卡片"，分隔线本身不会渲染出来。
-- 连续两个以上空行 = 额外留白：敲 1 个空行是正常分段，每多敲 1 个空行就在卡片上多出一个段落间距的空白（落在页首/页尾时自动忽略）。
+插件等待字体与图片尺寸就绪，再用所选模板的真实 DOM 高度自动分页。标题不会跨页，长段落和代码块可以接续到下一张卡片。
 
-所以通常只需要正常写文章；想手动控制换图时，写一行 `---` 即可。
+- 单独一行 `---` 强制从新卡片开始，分隔线本身不会绘制。
+- 一个空行正常分段；更多连续空行增加留白，页首与页尾的额外空白会被忽略。
+- **避免孤行**默认开启。段落跨页时，避免把最后一行单独留在下一张卡片，因此前一页底部可能多留一点空白。关闭后更偏向尽量填满每页。
+- 设置中的**左右边距**为 `0` 时使用各模板默认值；工具栏用于快速调整自定义边距。封面标题会跟随可用宽度重新换行。
+- 过长的不可拆分表格或列表项仍受卡片固定高度限制，建议在原文中拆成较短的内容块。
 
-### 5. 设置头像、昵称和页脚
+### 模板与配色
 
-进入 Obsidian 设置 → 第三方插件 → Smart RED，可以设置：
+| 界面名称 | 模板 ID | 适用内容 |
+| --- | --- | --- |
+| 清爽编辑版 | `fresh-editorial` | 冷浅灰正文、青灰封面，适合长文；新安装默认模板。 |
+| 数据简报 | `data-brief` | 分析、复盘、表格，青绿强调色与要点提示框。 |
+| 手写信笺 | `letter` | 叙事和长信，暖纸、宋体与首行缩进。 |
+| 档案夹 | `dossier` | 案例复盘，红色侧线与案卷式页眉。 |
+| 编辑纸／黑白报告／新网格 | `editorial`／`monochrome`／`neo-grid` | 编辑纸面、报告、网格排版。 |
+| 暖调小志／深夜杂志／象牙随笔 | `warm-zine`／`noir-magazine`／`ivory-essay` | 个人写作、深色杂志、克制随笔。 |
+| 红册／石板手记／珍珠杂志／墨色报告 | `red-ledger`／`slate-journal`／`pearl-magazine`／`ink-report` | 清单、手记、叙事与高密度报告。 |
+| 暖阳文艺／备忘录 | `warm-sun`／`memo` | 暖色文艺长文与备忘录样式。 |
+| Claude／MiniMax／xAI／Lovable／Notion／Figma／Apple／The Verge／Wired | `claude`／`minimax`／`xai`／`lovable`／`notion`／`figma`／`apple`／`the-verge`／`wired` | 九套品牌视觉参考模板。 |
 
-- `Avatar`：头像 URL 或本地资源路径。
-- `Nickname`：显示在卡片页眉里的昵称。
-- `Subtitle`：认证、身份、栏目名等短说明。
-- `Footer`：页脚左下角文案，例如公众号名、账号名、系列名；默认是 `Smart RED`。
-- `Show header` / `Show footer`：分别控制页眉和页脚的显示。
-- `Round avatar`：头像是否显示为圆形。
+点击**配色**预览并应用方案。浅色、深色方案分组显示，与当前模板明暗一致的分组排在前面。选择相反明暗的配色会有提示，仍可应用；切换模板时，若当前配色与新模板明暗不匹配，会自动恢复**默认配色**。
 
-如果不填头像昵称，模板会显示默认的杂志页眉；填了之后会显示你的创作者信息。
+四套新模板默认使用各自的完整配色，可通过配色面板或设置页的配色预设切换，手动颜色设置在这四套模板中隐藏。其他模板保留已保存的自定义颜色，并在设置页提供正文、背景、强调、加粗、高亮和 H1—H3 颜色。加粗与高亮旁的重置按钮可分别恢复对应的默认颜色。预览与导出使用同一套颜色。
 
-### 6. 调整模板和主题
+### 清爽编辑版的阅读设置
 
-插件内置 19 套模板：
+| 档位 | 正文字号 | 行高 | 段间距 |
+| --- | --- | --- | --- |
+| 舒适 | 40 像素 | 1.7 | 28 像素 |
+| 紧凑 | 36 像素 | 1.7 | 24 像素 |
 
-- `Editorial`：默认，高级杂志纸张感，适合中文长文阅读。
-- `Monochrome`：黑白研究报告风，适合严肃信息。
-- `Neo Grid`：网格和强强调，适合结构化观点。
-- `Warm Zine`：暖色 zine 风，适合个人表达。
-- `Noir Magazine`：深色杂志风，适合强情绪内容。
-- `Ivory Essay`：干净的长文随笔纸张，适合耐读型文章。
-- `Red Ledger`：红色账本/手稿风，适合复盘、清单和观点文。
-- `Slate Journal`：冷静期刊风，适合职场分析、组织观察。
-- `Pearl Magazine`：柔和杂志风，适合更精致的女性向/生活方式内容。
-- `Ink Report`：克制报告风，适合严肃长文和高密度内容。
-- `Claude`：暖奶油纸、衬线标题、珊瑚强调，humanist 编辑感。
-- `MiniMax`：纯白近黑、角落多色渐变，干净的 AI 基建感。
-- `xAI`：近黑画布、日落/暮紫渐变、等宽大写页眉，工程冷感。
-- `Lovable`：暖羊皮纸、圆润人文字体、暖色渐变与圆角，亲和手作感。
-- `Notion`：三色 pastel 标题块、灰底 callout、彩色标签 pill，产品工作区感。
-- `Figma`：黑白编辑、荧光高亮标题、淡彩色块，技术又活泼。
-- `Apple`：超大紧字距标题、大留白、单一 Action Blue，发布会海报感。
-- `The Verge`：近黑底、酸薄荷/紫外光、超粗大写标题，科技小报夜店感。
-- `Wired`：黑白杂志、高瘦衬线大字报头、首字下沉，印刷杂志感。
+这些尺寸以 1080 × 1440 画布为基准。正文字号可在 28—52 像素之间调整，标题字号随之缩放；页眉页脚默认 28 像素。手动修改字号或段间距后，不符合预设时显示「自定义」；重新选择档位会重置字号和段距，保留字体。
 
-品牌系列（`Claude`～`Wired`）的配色和字体参考 [awesome-design-md](https://github.com/VoltAgent/awesome-design-md)。其中 `Apple` / `Notion` / `Lovable` / `Wired` 用到 Inter、Hanken Grotesk、Playfair Display、Source Serif 4 几款字体，已随插件打包，离线可用。
+清爽编辑版独立保存阅读设置，不改变其他模板的全局字号和字体。设置页可分别填写标题、正文字体，支持 CSS 字体栈；工具栏字体菜单只调整正文。中文字体使用本机安装的字体，不额外下载，不同设备的字形、换行与页数可能不同。
 
-设置页里的 `Custom Theme` 可以在当前模板基础上微调：
+### 个人信息、封面与导出
 
-- `Font family`：自定义字体栈。
-- `Text color`：正文和标题颜色。
-- `Background color`：卡片背景色。
-- `Accent color`：强调色、链接色、装饰线颜色。
-- `Bold color`：`**加粗文字**`的文字颜色。
-- `Highlight color`：`==高亮文字==`的背景颜色，也可以写成 `==**加粗并高亮**==` 叠加使用。
-- `Paragraph spacing`：段落间距。
+在「设置 → Smart RED」配置头像、昵称、账号、简介、页脚及其显示开关。封面设置控制是否生成标题封面、显示作者，以及隐藏正文重复标题。
 
-点击 `Bold color` 或 `Highlight color` 旁的重置按钮，可恢复模板默认配色。这两项设置同时应用于预览和导出图片。
+**复制**适合分享单张，**PNG**保存当前页，**ZIP**导出整篇。默认 2 倍分辨率，对应 2160 × 2880 像素。提高导出倍率只改变清晰度，不改变版式和相对字号。
 
-预览顶部工具栏也提供了正文字号、页眉页脚字号和常用字体的快捷入口，适合边看边调。
+## 内容支持
 
-建议先选模板，再只改一两个变量。改太多颜色容易破坏模板本来的质感。
+支持 H1—H6、加粗、高亮、斜体、删除线、链接及双链显示文字、行内代码、列表、待办、引用、代码块、图片和表格。相对图片路径按当前笔记解析，加载失败的图片会跳过。Frontmatter、Obsidian Callout／嵌入、Mermaid、数学公式不按 Obsidian 原生块渲染。
 
-### 7. 导出建议
+## 常见问题
 
-- 想快速发给别人：用 `Copy`，直接复制当前页。
-- 想保存单张图：用 `PNG`。
-- 想导出整篇笔记：用 `ZIP`。
-- 默认导出倍率是 `2x`，也就是 2160×2880，适合小红书发布。需要更小文件可以在设置里改成 `1x`。
+**复制或 PNG 提示失败，或者导出空白。** 先重载最新插件，用一篇短笔记和内置模板重试；图片复制还受系统剪贴板支持影响。反馈时提供 `Smart RED: copy failed` 或 `Smart RED: export failed` 后面的完整控制台错误、最小笔记，以及 Obsidian 调试信息。
 
-### 8. 常见问题
+[Issue 11](https://github.com/Viy1204/smart-red-public/issues/11) 记录了 0.1.7 在特定环境中的 Copy／PNG 失败反馈，原因尚未确定，0.3.0 不将其列为已修复。
 
-**导出的图片是黑的或空白怎么办？**
+**换台设备字体就变了。** 多数中文字体依赖系统回退。可安装目标字体，或选择两台设备都有的字体。部分品牌模板内置 Inter、Hanken Grotesk、Playfair Display、Source Serif 4 子集，见 [LICENSE-FONTS](./LICENSE-FONTS)。
 
-请先确认已经重载插件，并使用最新构建。当前版本会用可渲染的 light DOM 导出，并在复制/导出后检查明显空白图，避免成功提示后粘贴出来是空白。
+**升级后页尾留白增加。** 新增的避免孤行设置可能将一行移到下一页，以保留完整段尾；想让每页更满，可关闭该选项。最后一页允许较短。
 
-**Copy 没反应怎么办？**
 
-部分系统或 Obsidian 环境可能限制图片剪贴板写入。可以改用 `PNG` 下载当前页。
+## 开发与发版
 
-**为什么链接不会显示原始 Markdown？**
-
-插件会把 `[文字](链接)`、裸 URL、`[[wikilink|别名]]` 渲染成更适合图片的链接文本，不会直接暴露 Markdown 语法。
-
-**图片不显示怎么办？**
-
-优先使用可访问的网络图片或 Obsidian 能读取的本地路径。相对路径会按当前 Markdown 文件所在目录解析；如果图片加载失败，Smart RED 会跳过这张坏图，不再保留大占位。
-
-**一页文字太多怎么办？**
-
-插件会等待字体加载后用真实 DOM 测量分页，优先保证不截字，同时尽量填满图片空间。单独一行 `---` 强制从下一张卡片开始。
-
-### 支持的 Markdown 语法
-
-| 语法 | 支持 | 说明 |
-|------|------|------|
-| `# H1` ~ `###### H6` | ✅ | 分页时标题不跨页 |
-| `**粗体**` / `*斜体*` | ✅ | |
-| `- 列表` / `1. 列表` | ✅ | |
-| `> 引用` | ✅ | |
-| `` `代码` `` | ✅ | |
-| ` ``` ` 代码块 | ✅ | 跨页时添加续接标记「⤻ 续上页」 |
-| `![alt](url)` 图片 | ✅ | 成功加载后按真实宽高排版；加载失败会跳过 |
-| `\| 表格 \|` | ✅ | 表格不跨页，超出记「见下页」 |
-| `[[wikilink]]` | ✅ | 渲染为链接文本 |
-| `---` 强制翻页 | ✅ | 不渲染横线，直接开新卡片 |
-| 连续空行留白 | ✅ | 2+ 空行按数量增加段间空白 |
-| `~~删除线~~` | ✅ | |
-| `- [ ]` 任务列表 | ✅ | |
-| Callouts / Embeds | ❌ | 自动剥离 |
-| Mermaid / Math | ❌ | 自动剥离 |
-| Frontmatter | ❌ | 自动剥离 |
-
-## 模板
-
-### Editorial
-默认模板。暖纸底、serif 标题、细网格和杂志页码，适合科技评论、职场观点和深度长文。
-
-### Monochrome
-象牙纸黑白排版，强边框和研究报告气质，适合高密度、严肃、长段落内容。
-
-### Neo Grid
-蓝色网格、荧光标注、粗标题，适合金句、结构化观点和更设计感的表达。
-
-### Warm Zine
-黄纸、手作纹理、暖色强调，适合个人化写作、随笔和不想太“企业感”的内容。
-
-### Noir Magazine
-深色杂志风、粉色重点、夜间编辑部气质，适合强情绪、夜间、评论类内容。
-
-### Ivory Essay
-干净象牙纸、细边框和低调强调，适合耐读型中文长文。
-
-### Red Ledger
-淡红底和竖向账本线，适合复盘、清单、观点和系列文章。
-
-### Slate Journal
-冷静灰绿期刊风，适合职场、组织和研究类内容。
-
-### Pearl Magazine
-柔和杂志感，轻装饰、低噪音，适合更精致的叙事内容。
-
-### Ink Report
-克制黑白报告风，边框明确，适合高密度信息和严肃表达。
-
-### Claude
-暖奶油纸底、衬线标题、珊瑚强调和黑色射线点缀，humanist 编辑部气质，适合科技评论和有温度的长文。
-
-### MiniMax
-纯白画布、近黑标题、角落多色渐变球，干净利落的 AI 基建感，适合产品发布和结构化观点。
-
-### xAI
-近黑画布、底部日落/暮紫渐变、等宽大写页眉，工程冷感、未来感，适合金句和强观点短文（深色长文偏闷）。
-
-### Lovable
-暖羊皮纸、圆润人文字体、暖色渐变与圆角一切，亲和手作感，适合个人写作和产品故事。
-
-### Notion
-三色轮换 pastel 标题块、灰底 callout、彩色标签 pill，产品工作区气质，适合教程、清单和知识整理。
-
-### Figma
-黑白编辑骨架、荧光柠檬高亮标题、淡彩色块点缀，技术又活泼，适合设计观点和结构化表达。
-
-### Apple
-超大紧字距标题、大量留白、单一 Action Blue 和图片投影，发布会海报感，适合极简金句和产品叙事。
-
-### The Verge
-近黑底、酸薄荷/紫外光强调、超粗大写标题和薄荷引用块，科技小报夜店感，适合强情绪、强观点内容（中文标题不会大写）。
-
-### Wired
-黑白杂志、高瘦衬线大字报头、首字下沉和黑色粗分隔条，印刷杂志气质，适合深度报道和长文。
-
-## 技术栈
-
-- **语言**: TypeScript
-- **构建**: esbuild
-- **测试**: Bun test + happy-dom
-- **渲染**: Shadow DOM 预览隔离、light DOM 离屏导出、html-to-image@1.11.11、html2canvas 1.4.1 兜底
-- **导出**: JSZip 3.10.1
-- **排版**: @cto.af/linebreak（CJK 断字）、Kinsoku 禁则规则（L1 严格模式）
-- **分页**: 自研 Folio.js v2 overflow-fill 算法
-
-## 开发
-
-[smart-red-public](https://github.com/Viy1204/smart-red-public) 是开发、issue、PR 和版本发布的主仓库，后续改动统一提交到这里。
-
-发布时更新 `package.json`、`manifest.json` 和 `versions.json`，运行 `bun test`、`bun run build`，合入 `main` 后创建与 manifest 版本完全一致的 GitHub Release 标签（例如 `0.1.6`，不带 `v` 前缀），并附上 `main.js`、`manifest.json`、`styles.css`。Obsidian 插件市场已指向本仓库，后续版本通过这些 Release 分发，无需重新提交市场审核。
+本公有仓库统一承接开发、问题反馈、PR 和版本发布。
 
 ```bash
-# 安装
-bun install
-
-# 开发模式（watch）
-bun run dev
-
-# 生产构建
-bun run build    # 输出 main.js
-
-# 测试
-bun test         # 246 tests, 642 expect() calls
-
-# 测试（watch）
-bun test --watch
+git clone https://github.com/Viy1204/smart-red-public
 ```
 
-### 项目结构
-
-```
-src/
-├── main.ts                    # 插件入口 + 注册
-├── view.ts                    # RedView (Obsidian ItemView)
-├── settings.ts                # 设置页
-├── types.ts                   # 核心类型 (BlockType, SemanticBlock)
-├── cjk-line-breaker.ts        # CJK 自动换行 + Kinsoku 禁则
-├── clipboard.ts               # 当前页 PNG 复制到剪贴板
-├── markdown-parser.ts         # Markdown → 语义块树
-├── pagination-engine.ts       # overflow-fill 分页引擎
-├── section-splitter.ts        # 连续分页 + 兼容旧 section 工具
-├── template-renderer.ts       # Shadow DOM 模板渲染器
-├── export-pipeline.ts         # PNG/ZIP 导出管线
-├── templates/
-│   ├── types.ts               # 模板接口
-│   ├── gallery.ts             # 10 套精品模板
-│   └── utils.ts               # Markdown inline 渲染与模板工具
-├── spike-rendering.ts         # 渲染验证 spike
-└── __tests__/                 # 24 个测试文件
+```bash
+cd smart-red-public
 ```
 
-## 设计决策
+```bash
+bun install --frozen-lockfile
+```
 
-- **Shadow DOM 预览隔离** — 预览使用 Shadow DOM，模板样式不污染 Obsidian 全局样式
-- **Light DOM 离屏导出** — PNG、ZIP、Copy 使用普通 DOM 导出，避免 Shadow DOM host 被截图库捕获成黑图
-- **html-to-image@1.11.11 固定版本** — v1.11.13+ 存在回归 bug
-- **不分页给 AI 做** — 智能分页是 core differentiator，不用 AI 不用模板
-- **只输出 1080×1440** — 小红书原生比例，不做其他尺寸
-- **CSS 变量做主题覆盖** — 默认模板保持精品视觉，自定义主题只覆盖关键变量，避免破坏整体版式
+```bash
+bun test
+```
 
-## License
+```bash
+bun run build
+```
 
-MIT
+开发监听使用 `bun run dev`。生产构建生成 `main.js`、`styles.css`；修改样式时编辑 `styles.css.base` 和模板源码，再重新构建。
+
+发布时同步更新 `package.json`、`manifest.json`、`versions.json`、本文档及 [CHANGELOG.md](./CHANGELOG.md)，运行测试与构建，再合入 `main`。创建与 manifest 版本逐字一致的 tag，例如 `0.3.0`，不加 `v`。发布非草稿、非预发布的 GitHub Release，独立上传 `main.js`、`manifest.json`、`styles.css`，并下载核对附件与已验证构建一致。普通版本更新不需要重新提交市场登记 PR。
+
+技术栈为 TypeScript、esbuild、Bun test 与 happy-dom、`@cto.af/linebreak`、`html-to-image@1.11.11`、`html2canvas`、`fflate`。预览用 Shadow DOM 隔离样式，导出在离屏 light DOM 渲染。实际分页依赖 DOM 高度，不能仅靠模拟 DOM 测试判断真实排版。
+
+## 许可
+
+[MIT](./LICENSE)。内置字体说明见 [LICENSE-FONTS](./LICENSE-FONTS)。
