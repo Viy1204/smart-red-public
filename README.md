@@ -8,11 +8,19 @@
 
 Smart RED requires desktop Obsidian. It does not upload or publish your notes.
 
+![Smart RED preview beside a Markdown note in Obsidian](docs/images/hero.png)
+
+*Write in the note, preview the 3:4 card beside it, and export when the pagination looks right.*
+
 ## What's new in 0.3.1
 
 - The palette picker now has clear light/dark category controls, color swatches, names, and selection marks. The default option stays at the top; narrow windows use two columns.
 - Palette cards have enough height for their content instead of overflowing Obsidian's fixed-height buttons.
 - Plugin unload no longer closes the preview leaf. Obsidian manages the view lifecycle and preserves its position in your workspace. This addresses the blocking automated-review finding in 0.3.0.
+
+<img src="docs/images/palette-picker.png" alt="Smart RED palette picker with light and dark categories" width="780">
+
+*The 0.3.1 palette picker: browse 浅色 (light) and 深色 (dark) categories, preview each palette, and keep the template default one click away.*
 
 ## What's new in 0.3.0
 
@@ -21,6 +29,10 @@ Smart RED requires desktop Obsidian. It does not upload or publish your notes.
 - Side-padding controls and an optional paragraph widow guard, enabled by default.
 - Comfortable and Compact reading presets for Fresh Editorial, with separate body and heading fonts.
 - Chinese template names, settings, and toolbar labels.
+
+![Four new Smart RED templates rendered from the same note](docs/images/templates.png)
+
+*The four new templates, rendered from one travel note: 清爽编辑版, 数据简报, 手写信笺, and 档案夹. Cards are 1080 × 1440 px; exports are 2160 × 2880 px.*
 
 ## Install or update
 
@@ -108,6 +120,10 @@ Smart RED waits for fonts and image dimensions, measures content in the selected
 - **左右边距** (side padding) in settings accepts `0` for each template's default padding. The toolbar adjusts a custom padding value; cover titles reflow to the available width.
 - Oversized tables and indivisible list items can still exceed a fixed card. Split those content blocks in the source note.
 
+<img src="docs/images/layout-settings.png" alt="Smart RED layout settings for paragraph spacing, side padding, and widow guard" width="820">
+
+*Spacing, side padding, and the widow guard are applied to both the preview and the exported images.*
+
 ### Templates and palettes
 
 | Template shown in the interface | ID | Suitable for |
@@ -132,6 +148,10 @@ The four new templates use their own colors by default and can be recolored thro
 | --- | --- | --- | --- |
 | 舒适 / Comfortable | 40 px | 1.7 | 28 px |
 | 紧凑 / Compact | 36 px | 1.7 | 24 px |
+
+<img src="docs/images/reading-presets.png" alt="Comfortable and Compact reading presets side by side" width="820">
+
+*The same note at Comfortable and Compact, shown with the Warm Paper palette. Body size and paragraph gap change; line height and fonts stay independent.*
 
 Sizes refer to the 1080 × 1440 canvas. Body size can be adjusted from 28 to 52 px; heading sizes scale with it. Header and footer text defaults to 28 px. Changing body size or paragraph spacing outside a preset shows **自定义** (custom); choosing a preset again resets those two values and keeps the fonts.
 
