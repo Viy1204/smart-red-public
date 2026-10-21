@@ -8,9 +8,11 @@
 
 Smart RED requires desktop Obsidian. It does not upload or publish your notes.
 
-## 0.3.1 fix
+## What's new in 0.3.1
 
-Plugin unload no longer closes the preview leaf. Obsidian manages the view lifecycle and preserves its position in your workspace. This addresses the blocking automated-review finding in 0.3.0.
+- The palette picker now has clear light/dark category controls, color swatches, names, and selection marks. The default option stays at the top; narrow windows use two columns.
+- Palette cards have enough height for their content instead of overflowing Obsidian's fixed-height buttons.
+- Plugin unload no longer closes the preview leaf. Obsidian manages the view lifecycle and preserves its position in your workspace. This addresses the blocking automated-review finding in 0.3.0.
 
 ## What's new in 0.3.0
 
@@ -120,7 +122,7 @@ Smart RED waits for fonts and image dimensions, measures content in the selected
 | 暖阳文艺 / 备忘录 | `warm-sun` / `memo` | Warm serif pages and a memo layout. |
 | Claude / MiniMax / xAI / Lovable / Notion / Figma / Apple / The Verge / Wired | `claude` / `minimax` / `xai` / `lovable` / `notion` / `figma` / `apple` / `the-verge` / `wired` | Nine brand-inspired layouts. |
 
-Choose **配色** to preview and apply a color scheme. Light and dark palettes are grouped, with the group matching the current template shown first. Selecting a palette of the opposite tone shows a warning but remains possible. Switching templates resets a palette whose tone does not match the new template to **默认配色** (template default).
+Choose **配色** to preview and apply a color scheme. Switch between **浅色** (light) and **深色** (dark) to browse palettes; browsing does not apply a selection. Each card shows its colors and name, with a check on the current selection. The picker opens in the selected palette's category, or follows the template when using default/custom colors. **默认配色** (template default) stays at the top. Selecting a palette of the opposite tone shows a warning but remains possible. Switching templates resets a palette whose tone does not match the new template to the template default.
 
 The four new templates use their own colors by default and can be recolored through the palette picker or the palette preset menu in settings. Their manual color controls are hidden. The other templates retain their saved custom colors and offer body, background, accent, bold, highlight, and H1–H3 overrides in settings. The bold and highlight reset buttons restore those individual colors to their defaults. Preview and export share these colors.
 
