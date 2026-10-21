@@ -323,67 +323,172 @@
   border: 1px solid rgba(0, 0, 0, 0.12);
 }
 
-.smart-red-palette-modal .smart-red-palette-intro {
-  margin: 0 0 4px;
-  color: var(--text-muted);
-  font-size: 13px;
-  line-height: 1.6;
+.modal.smart-red-palette-dialog {
+  box-sizing: border-box;
+  min-width: 0;
+  width: calc(100vw - 32px);
+  max-width: 550px;
 }
 
-.smart-red-palette-section { margin-top: 18px; }
+.smart-red-palette-dialog .modal-header { margin-bottom: 12px; }
 
-.smart-red-palette-section h4 {
-  margin: 0 0 10px;
-  font-size: 14px;
+.smart-red-palette-modal {
+  min-width: 0;
   color: var(--text-normal);
+  font-family: inherit;
 }
 
-.smart-red-palette-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-  gap: 10px;
+.smart-red-palette-modal .smart-red-palette-caption {
+  margin: 0 0 14px;
+  overflow: hidden;
+  color: var(--text-muted);
+  font-size: var(--font-ui-small);
+  line-height: 1.4;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
-.smart-red-palette-card {
+.smart-red-palette-modal button.smart-red-palette-reset,
+.smart-red-palette-modal button.smart-red-palette-card {
+  position: relative;
+  box-sizing: border-box;
   display: flex;
-  flex-direction: column;
-  gap: 6px;
+  min-width: 0;
+  width: 100%;
+  height: auto;
   padding: 10px;
   border: 1px solid var(--background-modifier-border);
   border-radius: 8px;
   background: var(--background-primary);
-  cursor: pointer;
+  box-shadow: none;
+  color: var(--text-normal);
+  font: inherit;
+  line-height: 1.4;
   text-align: left;
+  white-space: normal;
+  cursor: pointer;
+  transition: none;
 }
 
-.smart-red-palette-card:hover { background: var(--background-modifier-hover); }
+.smart-red-palette-modal button.smart-red-palette-reset {
+  align-items: center;
+  justify-content: flex-start;
+  min-height: 38px;
+  padding: 8px 10px;
+  margin-bottom: 18px;
+  background: var(--background-secondary);
+}
 
-.smart-red-palette-card.is-active {
+.smart-red-palette-modal .smart-red-palette-segments {
+  display: flex;
+  gap: 4px;
+  padding: 3px;
+  margin-bottom: 12px;
+  border-radius: 8px;
+  background: var(--background-secondary);
+}
+
+.smart-red-palette-modal .smart-red-palette-segments button {
+  box-sizing: border-box;
+  display: flex;
+  flex: 1;
+  align-items: center;
+  justify-content: center;
+  min-width: 0;
+  height: auto;
+  min-height: 30px;
+  padding: 4px 10px;
+  border: 1px solid transparent;
+  border-radius: 5px;
+  background: transparent;
+  box-shadow: none;
+  color: var(--text-muted);
+  font: inherit;
+  font-size: var(--font-ui-small);
+  line-height: 1.4;
+  white-space: normal;
+  cursor: pointer;
+  transition: none;
+}
+
+.smart-red-palette-modal .smart-red-palette-segments button[aria-pressed="true"] {
+  border-color: var(--background-modifier-border);
+  background: var(--background-primary);
+  color: var(--text-normal);
+  font-weight: 600;
+}
+
+.smart-red-palette-modal .smart-red-palette-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.smart-red-palette-modal button.smart-red-palette-card {
+  flex-direction: column;
+  align-items: stretch;
+  justify-content: space-between;
+  gap: 10px;
+  min-height: 100px;
+}
+
+.smart-red-palette-modal button.smart-red-palette-reset:hover,
+.smart-red-palette-modal button.smart-red-palette-card:hover,
+.smart-red-palette-modal .smart-red-palette-segments button:hover {
+  background: var(--background-modifier-hover);
+}
+
+.smart-red-palette-modal button.smart-red-palette-reset.is-active,
+.smart-red-palette-modal button.smart-red-palette-card.is-active {
   border-color: var(--interactive-accent);
   box-shadow: 0 0 0 1px var(--interactive-accent);
 }
 
-.smart-red-palette-swatches {
+.smart-red-palette-modal button:focus-visible {
+  outline: 2px solid var(--interactive-accent);
+  outline-offset: 3px;
+}
+
+.smart-red-palette-modal .smart-red-palette-swatches {
   display: flex;
-  gap: 4px;
-  height: 20px;
+  flex: none;
+  height: 36px;
+  overflow: hidden;
+  border: 1px solid var(--background-modifier-border);
+  border-radius: 4px;
 }
 
-.smart-red-palette-swatch {
+.smart-red-palette-modal .smart-red-palette-swatch {
   flex: 1;
-  border-radius: 3px;
-  border: 1px solid rgba(0, 0, 0, 0.08);
+  min-width: 0;
 }
 
-.smart-red-palette-name {
-  font-size: 13px;
-  font-weight: 600;
+.smart-red-palette-modal .smart-red-palette-swatch:first-child { flex: 2; }
+
+.smart-red-palette-modal .smart-red-palette-name {
+  min-width: 0;
+  overflow: hidden;
+  padding-right: 18px;
   color: var(--text-normal);
+  font-size: var(--font-ui-small);
+  line-height: 1.4;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
-.smart-red-palette-tone {
-  font-size: 11px;
-  color: var(--text-muted);
+.smart-red-palette-modal .smart-red-palette-check {
+  position: absolute;
+  right: 10px;
+  bottom: 10px;
+  color: var(--interactive-accent);
+  font-size: var(--font-ui-small);
+  line-height: 1.4;
+}
+
+@media (max-width: 479px) {
+  .smart-red-palette-modal .smart-red-palette-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
 }
 
 /* Bundled brand display fonts for offline rendering (SIL OFL licensed) */

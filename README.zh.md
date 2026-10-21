@@ -1,12 +1,18 @@
 # Smart RED
 
-![Obsidian](https://img.shields.io/badge/Obsidian-%3E%3D0.15.0-7C3AED?style=flat-square) ![version](https://img.shields.io/badge/version-0.3.0-blue?style=flat-square) ![release](https://img.shields.io/github/v/release/Viy1204/smart-red-public?style=flat-square) ![license](https://img.shields.io/badge/license-MIT-blue?style=flat-square)
+![Obsidian](https://img.shields.io/badge/Obsidian-%3E%3D0.15.0-7C3AED?style=flat-square) ![version](https://img.shields.io/badge/version-0.3.1-blue?style=flat-square) ![release](https://img.shields.io/github/v/release/Viy1204/smart-red-public?style=flat-square) ![license](https://img.shields.io/badge/license-MIT-blue?style=flat-square)
 
 将 Obsidian Markdown 笔记转换成 **1080 × 1440 像素、3:4 比例的小红书图文卡片**。在笔记旁实时预览，从 25 套模板中选择样式，调整字体、配色与留白，再复制或导出 PNG。
 
 > English：[README.md](./README.md) · 版本记录：[CHANGELOG.md](./CHANGELOG.md)
 
 Smart RED 适用于桌面版 Obsidian，不负责上传或发布笔记。
+
+## 0.3.1 更新
+
+- 配色弹窗改为清楚的浅色／深色分类切换，色卡只保留色带、名称和选中标记；默认配色独立放在顶部，窄窗口自动改为两列。
+- 修复宿主固定按钮高度导致的色块和文字溢出。
+- 卸载插件时不再主动关闭预览面板，由 Obsidian 管理视图生命周期并保留用户设置的面板位置，修复 0.3.0 社区目录自动审核的阻断项。
 
 ## 0.3.0 更新
 
@@ -114,7 +120,7 @@ Smart RED 适用于桌面版 Obsidian，不负责上传或发布笔记。
 | 暖阳文艺／备忘录 | `warm-sun`／`memo` | 暖色文艺长文与备忘录样式。 |
 | Claude／MiniMax／xAI／Lovable／Notion／Figma／Apple／The Verge／Wired | `claude`／`minimax`／`xai`／`lovable`／`notion`／`figma`／`apple`／`the-verge`／`wired` | 九套品牌视觉参考模板。 |
 
-点击**配色**预览并应用方案。浅色、深色方案分组显示，与当前模板明暗一致的分组排在前面。选择相反明暗的配色会有提示，仍可应用；切换模板时，若当前配色与新模板明暗不匹配，会自动恢复**默认配色**。
+点击**配色**预览并应用方案，通过**浅色／深色**切换分类，浏览分类不会应用配色。每张色卡显示色带和名称，当前选择带勾选标记。弹窗优先打开已选配色的分类，使用默认或自定义颜色时跟随模板明暗；**默认配色**始终放在顶部。选择相反明暗的配色会有提示，仍可应用；切换模板时，若当前配色与新模板明暗不匹配，会自动恢复默认配色。
 
 四套新模板默认使用各自的完整配色，可通过配色面板或设置页的配色预设切换，手动颜色设置在这四套模板中隐藏。其他模板保留已保存的自定义颜色，并在设置页提供正文、背景、强调、加粗、高亮和 H1—H3 颜色。加粗与高亮旁的重置按钮可分别恢复对应的默认颜色。预览与导出使用同一套颜色。
 
@@ -176,7 +182,7 @@ bun run build
 
 开发监听使用 `bun run dev`。生产构建生成 `main.js`、`styles.css`；修改样式时编辑 `styles.css.base` 和模板源码，再重新构建。
 
-发布时同步更新 `package.json`、`manifest.json`、`versions.json`、本文档及 [CHANGELOG.md](./CHANGELOG.md)，运行测试与构建，再合入 `main`。创建与 manifest 版本逐字一致的 tag，例如 `0.3.0`，不加 `v`。发布非草稿、非预发布的 GitHub Release，独立上传 `main.js`、`manifest.json`、`styles.css`，并下载核对附件与已验证构建一致。普通版本更新不需要重新提交市场登记 PR。
+发布时同步更新 `package.json`、`manifest.json`、`versions.json`、本文档及 [CHANGELOG.md](./CHANGELOG.md)，运行测试与构建。推送候选分支后，在 Obsidian 社区管理页使用 **Review branch** 预检，消除阻断错误再合入 `main`。创建与 manifest 版本逐字一致的 tag，例如 `0.3.1`，不加 `v`。发布非草稿、非预发布的 GitHub Release，独立上传 `main.js`、`manifest.json`、`styles.css`，下载核对附件与已验证构建一致，再确认新版本自动审核完成、没有阻断错误且目录可用。普通版本更新不需要重新提交市场登记 PR。
 
 技术栈为 TypeScript、esbuild、Bun test 与 happy-dom、`@cto.af/linebreak`、`html-to-image@1.11.11`、`html2canvas`、`fflate`。预览用 Shadow DOM 隔离样式，导出在离屏 light DOM 渲染。实际分页依赖 DOM 高度，不能仅靠模拟 DOM 测试判断真实排版。
 

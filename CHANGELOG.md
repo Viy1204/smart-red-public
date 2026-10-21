@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.3.1 — 2026-10-21
+
+### 修复 / Fixed
+
+- 移除卸载插件时主动关闭预览面板的逻辑，由 Obsidian 管理视图生命周期，保留用户设置的面板位置。修复 0.3.0 社区目录审核的阻断项。 / Removed preview-leaf detachment during plugin unload so Obsidian can preserve the user's panel layout; addresses the blocking community-directory finding in 0.3.0.
+
+### 调整 / Changed
+
+- 配色弹窗改为浅色／深色分类切换，色卡只显示色带、名称和选中标记；默认配色独立显示，移除重复说明。 / Simplified the palette picker with light/dark category controls, color swatches, names, selection marks, and a separate default option.
+- 修复宿主固定按钮高度导致的文字和色块溢出，窄窗口自动切换为两列。 / Fixed palette content overflowing Obsidian's fixed-height buttons and added a two-column layout for narrow windows.
+
 ## 0.3.0 — 2026-10-21
 
 ### 新增 / Added

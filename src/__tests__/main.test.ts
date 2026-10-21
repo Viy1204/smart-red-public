@@ -1,5 +1,44 @@
 import { describe, expect, it } from "bun:test";
 import SmartRedPlugin from "../main";
+import { VIEW_TYPE_SMART_RED } from "../view";
+
+describe("SmartRedPlugin lifecycle", () => {
+  it("preserves a preview leaf moved into the main workspace when unloading", async () => {
+    const viewState = { type: VIEW_TYPE_SMART_RED, state: {}, pinned: true };
+    const leaf = { getViewState: () => viewState };
+    const leaves = [leaf];
+    const layout = {
+      main: {
+        type: "split",
+        direction: "horizontal",
+        children: [{ id: "moved-preview", type: "leaf", state: viewState }],
+      },
+    };
+    const workspace = {
+      getLeavesOfType: (type: string) => leaves.filter((item) => item.getViewState().type === type),
+      getLayout: () => layout,
+      detachLeavesOfType(type: string) {
+        if (type === VIEW_TYPE_SMART_RED) {
+          leaves.length = 0;
+          layout.main.children.length = 0;
+        }
+      },
+    };
+    const plugin = new SmartRedPlugin({ workspace } as any);
+    const beforeUnload = structuredClone({
+      layout: workspace.getLayout(),
+      leaves: workspace.getLeavesOfType(VIEW_TYPE_SMART_RED).map((item) => item.getViewState()),
+    });
+
+    await plugin.onunload();
+
+    const afterUnload = structuredClone({
+      layout: workspace.getLayout(),
+      leaves: workspace.getLeavesOfType(VIEW_TYPE_SMART_RED).map((item) => item.getViewState()),
+    });
+    expect(afterUnload).toEqual(beforeUnload);
+  });
+});
 
 describe("SmartRedPlugin.loadSettings", () => {
   it("falls back to defaults when loadData returns null", async () => {

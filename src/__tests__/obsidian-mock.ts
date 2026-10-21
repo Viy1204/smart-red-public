@@ -51,6 +51,7 @@ export class Plugin {
   constructor(app?: any) {
     this.app = app || {};
   }
+  onunload(): void {}
   async loadData(): Promise<any> { return {}; }
   async saveData(data: any): Promise<void> {}
   registerView(type: string, fn: any): void {}
