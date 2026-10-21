@@ -1,12 +1,16 @@
 # Smart RED
 
-![Obsidian](https://img.shields.io/badge/Obsidian-%3E%3D0.15.0-7C3AED?style=flat-square) ![version](https://img.shields.io/badge/version-0.3.0-blue?style=flat-square) ![release](https://img.shields.io/github/v/release/Viy1204/smart-red-public?style=flat-square) ![license](https://img.shields.io/badge/license-MIT-blue?style=flat-square)
+![Obsidian](https://img.shields.io/badge/Obsidian-%3E%3D0.15.0-7C3AED?style=flat-square) ![version](https://img.shields.io/badge/version-0.3.1-blue?style=flat-square) ![release](https://img.shields.io/github/v/release/Viy1204/smart-red-public?style=flat-square) ![license](https://img.shields.io/badge/license-MIT-blue?style=flat-square)
 
 将 Obsidian Markdown 笔记转换成 **1080 × 1440 像素、3:4 比例的小红书图文卡片**。在笔记旁实时预览，从 25 套模板中选择样式，调整字体、配色与留白，再复制或导出 PNG。
 
 > English：[README.md](./README.md) · 版本记录：[CHANGELOG.md](./CHANGELOG.md)
 
 Smart RED 适用于桌面版 Obsidian，不负责上传或发布笔记。
+
+## 0.3.1 修复
+
+卸载插件时不再主动关闭预览面板，由 Obsidian 管理视图生命周期并保留用户设置的面板位置。这修复了 0.3.0 社区目录自动审核的阻断项。
 
 ## 0.3.0 更新
 
@@ -176,7 +180,7 @@ bun run build
 
 开发监听使用 `bun run dev`。生产构建生成 `main.js`、`styles.css`；修改样式时编辑 `styles.css.base` 和模板源码，再重新构建。
 
-发布时同步更新 `package.json`、`manifest.json`、`versions.json`、本文档及 [CHANGELOG.md](./CHANGELOG.md)，运行测试与构建，再合入 `main`。创建与 manifest 版本逐字一致的 tag，例如 `0.3.0`，不加 `v`。发布非草稿、非预发布的 GitHub Release，独立上传 `main.js`、`manifest.json`、`styles.css`，并下载核对附件与已验证构建一致。普通版本更新不需要重新提交市场登记 PR。
+发布时同步更新 `package.json`、`manifest.json`、`versions.json`、本文档及 [CHANGELOG.md](./CHANGELOG.md)，运行测试与构建。推送候选分支后，在 Obsidian 社区管理页使用 **Review branch** 预检，消除阻断错误再合入 `main`。创建与 manifest 版本逐字一致的 tag，例如 `0.3.1`，不加 `v`。发布非草稿、非预发布的 GitHub Release，独立上传 `main.js`、`manifest.json`、`styles.css`，下载核对附件与已验证构建一致，再确认新版本自动审核完成、没有阻断错误且目录可用。普通版本更新不需要重新提交市场登记 PR。
 
 技术栈为 TypeScript、esbuild、Bun test 与 happy-dom、`@cto.af/linebreak`、`html-to-image@1.11.11`、`html2canvas`、`fflate`。预览用 Shadow DOM 隔离样式，导出在离屏 light DOM 渲染。实际分页依赖 DOM 高度，不能仅靠模拟 DOM 测试判断真实排版。
 

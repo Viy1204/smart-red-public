@@ -80,10 +80,6 @@ export default class SmartRedPlugin extends Plugin {
     this.addSettingTab(new SmartRedSettingTab(this.app, this));
   }
 
-  async onunload() {
-    this.app.workspace.detachLeavesOfType(VIEW_TYPE_SMART_RED);
-  }
-
   async loadSettings() {
     this.settings = normalizeSettings((await this.loadData()) ?? {});
   }

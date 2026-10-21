@@ -1,12 +1,16 @@
 # Smart RED
 
-![Obsidian](https://img.shields.io/badge/Obsidian-%3E%3D0.15.0-7C3AED?style=flat-square) ![version](https://img.shields.io/badge/version-0.3.0-blue?style=flat-square) ![release](https://img.shields.io/github/v/release/Viy1204/smart-red-public?style=flat-square) ![license](https://img.shields.io/badge/license-MIT-blue?style=flat-square)
+![Obsidian](https://img.shields.io/badge/Obsidian-%3E%3D0.15.0-7C3AED?style=flat-square) ![version](https://img.shields.io/badge/version-0.3.1-blue?style=flat-square) ![release](https://img.shields.io/github/v/release/Viy1204/smart-red-public?style=flat-square) ![license](https://img.shields.io/badge/license-MIT-blue?style=flat-square)
 
 **Smart RED** turns Obsidian Markdown notes into **Xiaohongshu (RED) image cards** at 1080 × 1440 pixels (3:4). Preview beside your note, choose from 25 templates, adjust typography and colors, then copy or export PNG images.
 
 > 中文说明：[README.zh.md](./README.zh.md) · Release history: [CHANGELOG.md](./CHANGELOG.md)
 
 Smart RED requires desktop Obsidian. It does not upload or publish your notes.
+
+## 0.3.1 fix
+
+Plugin unload no longer closes the preview leaf. Obsidian manages the view lifecycle and preserves its position in your workspace. This addresses the blocking automated-review finding in 0.3.0.
 
 ## What's new in 0.3.0
 
@@ -178,7 +182,7 @@ bun run build
 
 Development watch mode is `bun run dev`. Production builds generate `main.js` and `styles.css`; edit `styles.css.base` and the template source rather than the generated CSS.
 
-For a release, update `package.json`, `manifest.json`, and `versions.json`, update this documentation and [CHANGELOG.md](./CHANGELOG.md), run the tests and build, then merge into `main`. Create a tag exactly matching `manifest.version`, such as `0.3.0` without a `v` prefix, and publish a non-draft, non-prerelease GitHub Release with `main.js`, `manifest.json`, and `styles.css` as individual assets. Verify that the downloaded assets match the tested build. No new community registration PR is needed for an ordinary version update.
+For a release, update `package.json`, `manifest.json`, and `versions.json`, update this documentation and [CHANGELOG.md](./CHANGELOG.md), and run the tests and build. Push the candidate branch and use **Review branch** on the Obsidian community management page; resolve blocking errors before merging into `main`. Create a tag exactly matching `manifest.version`, such as `0.3.1` without a `v` prefix, and publish a non-draft, non-prerelease GitHub Release with `main.js`, `manifest.json`, and `styles.css` as individual assets. Verify that the downloaded assets match the tested build, then confirm the new release's automated review has completed without blocking errors and the directory listing is available. No new community registration PR is needed for an ordinary version update.
 
 The plugin uses TypeScript, esbuild, Bun test with happy-dom, `@cto.af/linebreak`, `html-to-image@1.11.11`, `html2canvas`, and `fflate`. Preview styles are isolated in Shadow DOM; export renders into off-screen light DOM. Pagination relies on measured DOM height; DOM mocks alone cannot verify actual page layout.
 

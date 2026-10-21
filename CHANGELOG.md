@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.3.1 — 2026-10-21
+
+### 修复 / Fixed
+
+- 移除卸载插件时主动关闭预览面板的逻辑，由 Obsidian 管理视图生命周期，保留用户设置的面板位置。修复 0.3.0 社区目录审核的阻断项。 / Removed preview-leaf detachment during plugin unload so Obsidian can preserve the user's panel layout; addresses the blocking community-directory finding in 0.3.0.
+
 ## 0.3.0 — 2026-10-21
 
 ### 新增 / Added
