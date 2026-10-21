@@ -31,7 +31,7 @@ describe('RedView', () => {
 
   test('has correct view type', () => {
     expect(view.getViewType()).toBe(VIEW_TYPE_SMART_RED);
-    expect(view.getDisplayText()).toBe('Smart RED Preview');
+    expect(view.getDisplayText()).toBe('Smart RED');
     expect(view.getIcon()).toBe('image');
   });
 
@@ -63,7 +63,30 @@ describe('RedView', () => {
       view.containerEl.querySelectorAll('.smart-red-export-btn')
     ).map((button) => button.textContent);
 
-    expect(buttons).toEqual(['Copy', 'PNG', 'ZIP']);
+    expect(buttons).toEqual(['复制', 'PNG', 'ZIP']);
+  });
+
+  test('toolbar exposes palette and side padding controls', async () => {
+    let savedSettings = DEFAULT_SETTINGS;
+    const leaf = new WorkspaceLeaf(app);
+    view = new RedView(leaf as any, DEFAULT_SETTINGS, async (settings) => {
+      savedSettings = settings;
+    });
+    (view as any).app = app;
+    await view.onOpen();
+
+    expect(view.containerEl.querySelector('.smart-red-palette-btn')?.textContent).toContain('配色');
+    const sideButtons = Array.from(
+      view.containerEl.querySelectorAll('.smart-red-side-step-btn')
+    ) as HTMLButtonElement[];
+    expect(sideButtons).toHaveLength(2);
+
+    sideButtons[1].click();
+    await new Promise((resolve) => setTimeout(resolve, 0));
+
+    expect((view as any).pluginSettings.sidePadding).toBe(78);
+    expect(savedSettings.sidePadding).toBe(78);
+    expect(view.containerEl.querySelector('.smart-red-side-size-label')?.textContent).toBe('78px');
   });
 
   test('toolbar separates navigation from scrollable tools', async () => {
@@ -94,9 +117,9 @@ describe('RedView', () => {
     increase.click();
     await new Promise((r) => setTimeout(r, 0));
 
-    expect((view as any).pluginSettings.fontSize).toBe(DEFAULT_SETTINGS.fontSize + 1);
-    expect(savedSettings.fontSize).toBe(DEFAULT_SETTINGS.fontSize + 1);
-    expect(view.containerEl.querySelector('.smart-red-font-size-label')?.textContent).toBe('32px');
+    expect((view as any).pluginSettings.freshReading.fontSize).toBe(DEFAULT_SETTINGS.freshReading.fontSize + 1);
+    expect(savedSettings.freshReading.fontSize).toBe(DEFAULT_SETTINGS.freshReading.fontSize + 1);
+    expect(view.containerEl.querySelector('.smart-red-font-size-label')?.textContent).toBe('41px');
 
     const chromeButtons = Array.from(
       view.containerEl.querySelectorAll('.smart-red-chrome-step-btn')
@@ -105,9 +128,9 @@ describe('RedView', () => {
     chromeIncrease.click();
     await new Promise((r) => setTimeout(r, 0));
 
-    expect((view as any).pluginSettings.chromeFontSize).toBe(DEFAULT_SETTINGS.chromeFontSize + 1);
-    expect(savedSettings.chromeFontSize).toBe(DEFAULT_SETTINGS.chromeFontSize + 1);
-    expect(view.containerEl.querySelector('.smart-red-chrome-size-label')?.textContent).toBe('23px');
+    expect((view as any).pluginSettings.freshReading.chromeFontSize).toBe(DEFAULT_SETTINGS.freshReading.chromeFontSize + 1);
+    expect(savedSettings.freshReading.chromeFontSize).toBe(DEFAULT_SETTINGS.freshReading.chromeFontSize + 1);
+    expect(view.containerEl.querySelector('.smart-red-chrome-size-label')?.textContent).toBe('29px');
 
     const select = view.containerEl.querySelector('.smart-red-font-select') as HTMLSelectElement;
     expect(select.options.length).toBeGreaterThanOrEqual(9);
@@ -117,8 +140,8 @@ describe('RedView', () => {
     select.dispatchEvent(new (select.ownerDocument.defaultView as any).Event('change'));
     await new Promise((r) => setTimeout(r, 0));
 
-    expect((view as any).pluginSettings.theme.fontFamily).toBe(select.options[1].value);
-    expect(savedSettings.theme.fontFamily).toBe(select.options[1].value);
+    expect((view as any).pluginSettings.freshReading.bodyFontFamily).toBe(select.options[1].value);
+    expect(savedSettings.freshReading.bodyFontFamily).toBe(select.options[1].value);
   });
 
   test('extracts H1 as document title and falls back to file name', () => {

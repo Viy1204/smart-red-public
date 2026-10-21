@@ -78,17 +78,45 @@ export class Notice {
   }
 }
 
+export class Modal {
+  app: any;
+  contentEl: HTMLElement;
+  titleEl: HTMLElement;
+  modalEl: HTMLElement;
+  constructor(app: any) {
+    this.app = app;
+    this.contentEl = document.createElement('div');
+    this.titleEl = document.createElement('div');
+    this.modalEl = document.createElement('div');
+    this.modalEl.appendChild(this.titleEl);
+    this.modalEl.appendChild(this.contentEl);
+  }
+  open(): void {
+    this.onOpen();
+  }
+  close(): void {
+    this.onClose();
+  }
+  onOpen(): void {}
+  onClose(): void {}
+}
+
 export class Setting {
   settingEl: HTMLElement;
   constructor(containerEl: HTMLElement) {
     this.settingEl = document.createElement('div');
     containerEl.appendChild(this.settingEl);
   }
-  setName(name: string): Setting { return this; }
+  setName(name: string): Setting {
+    this.settingEl.setAttribute('aria-label', name);
+    return this;
+  }
   setDesc(desc: string): Setting { return this; }
+  setHeading(): Setting { return this; }
   addDropdown(cb: any): Setting {
     const select = document.createElement('select');
     const api = {
+      selectEl: select,
       addOption: (v: string, l: string) => {
         const opt = document.createElement('option');
         opt.value = v;
@@ -112,16 +140,21 @@ export class Setting {
   addSlider(cb: any): Setting {
     const input = document.createElement('input');
     input.type = 'range';
-    cb({
+    const api = {
       setLimits: (min: number, max: number, step: number) => {
         input.min = String(min);
         input.max = String(max);
         input.step = String(step);
+        return api;
       },
-      setValue: (v: number) => { input.value = String(v); },
-      setDynamicTooltip: () => {},
-      onChange: (fn: any) => { input.addEventListener('input', () => fn(parseInt(input.value, 10))); },
-    });
+      setValue: (v: number) => { input.value = String(v); return api; },
+      setDynamicTooltip: () => api,
+      onChange: (fn: any) => {
+        input.addEventListener('input', () => fn(parseInt(input.value, 10)));
+        return api;
+      },
+    };
+    cb(api);
     this.settingEl.appendChild(input);
     return this;
   }
@@ -129,6 +162,9 @@ export class Setting {
     const input = document.createElement('input');
     input.type = 'text';
     const api = {
+      inputEl: input,
+      getValue: () => input.value,
+      setPlaceholder: (value: string) => { input.placeholder = value; return api; },
       setValue: (v: string) => {
         input.value = v;
         return api;
@@ -140,6 +176,31 @@ export class Setting {
     };
     cb(api);
     this.settingEl.appendChild(input);
+    return this;
+  }
+  addColorPicker(cb: any): Setting {
+    const input = document.createElement('input');
+    input.type = 'color';
+    const api = {
+      setValue: (value: string) => { input.value = value; return api; },
+      onChange: (fn: any) => {
+        input.addEventListener('input', () => fn(input.value));
+        return api;
+      },
+    };
+    cb(api);
+    this.settingEl.appendChild(input);
+    return this;
+  }
+  addExtraButton(cb: any): Setting {
+    const button = document.createElement('button');
+    const api = {
+      setIcon: () => api,
+      setTooltip: (value: string) => { button.title = value; return api; },
+      onClick: (fn: any) => { button.addEventListener('click', fn); return api; },
+    };
+    cb(api);
+    this.settingEl.appendChild(button);
     return this;
   }
   addToggle(cb: any): Setting {

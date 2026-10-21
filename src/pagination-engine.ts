@@ -20,6 +20,8 @@ export interface PaginateContext {
   measure(blocks: SemanticBlock[]): number;
   // Width units (CJK char = 2) per line, used to split paragraphs.
   breakWidthFor(block: SemanticBlock): number;
+  // Pull a line back when a split would leave a single line on the next page.
+  avoidWidows?: boolean;
 }
 
 
@@ -229,14 +231,25 @@ function trySplitParagraph(
   const lines = paragraphLines(block, ctx);
   if (lines.length <= 1) return null;
 
-  const best = binarySearchMax(1, lines.length - 1, (k) =>
+  let best = binarySearchMax(1, lines.length - 1, (k) =>
     ctx.measure([...current, createParagraphFragment(block, lines, 0, k)]) <=
     ctx.availableHeight
   );
   if (best < 1) return null;
 
+  if (ctx.avoidWidows && lines.length - best === 1) {
+    if (best > 1) best -= 1;
+    else if (ctx.measure([block]) <= ctx.availableHeight) return null;
+  }
+
   const coarseCut = lines[best - 1].end;
-  const rawCut = refineParagraphCut(block, current, ctx, coarseCut, lines[best].end);
+  let rawCut = refineParagraphCut(block, current, ctx, coarseCut, lines[best].end);
+  if (ctx.avoidWidows && rawCut > coarseCut) {
+    const width = Math.max(1, Math.floor(ctx.breakWidthFor(block)));
+    if (breakLines(block.content.slice(rawCut), width).length === 1) {
+      rawCut = coarseCut;
+    }
+  }
   const cut = adjustCutOutsideInlineSpans(block.content, rawCut);
   if (cut <= 0) return null;
 

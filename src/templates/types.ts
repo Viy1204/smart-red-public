@@ -15,6 +15,8 @@ export interface TemplateUserInfo {
 
 export interface TemplateThemeOverrides {
   fontFamily: string;
+  bodyFontFamily?: string;
+  headingFontFamily?: string;
   textColor: string;
   backgroundColor: string;
   accentColor: string;
@@ -35,6 +37,8 @@ export interface TemplateRenderContext {
   // Blank reserve at the very top of every card so Xiaohongshu's AI-content
   // banner overlays empty space instead of the header/first line.
   topSafeArea?: number;
+  // 0 or undefined keeps the template's designed left/right padding.
+  sidePadding?: number;
 }
 
 export interface CoverRenderContext extends TemplateRenderContext {
@@ -45,6 +49,7 @@ export interface CoverRenderContext extends TemplateRenderContext {
 export interface Template {
   name: string;
   displayName: string;
+  description?: string;
   cardClassName: string;
   cardPadding: number;
   baseFontSize: number;

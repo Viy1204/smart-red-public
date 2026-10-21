@@ -10,6 +10,7 @@ import {
 } from "../templates/gallery";
 import {
   coverTitleFontSize,
+  coverTitleLines,
   fitCoverTitle,
   layoutTitleCover,
   COVER_TITLE_MIN_PX,
@@ -48,6 +49,16 @@ describe("coverTitleFontSize", () => {
       const size = coverTitleFontSize("标".repeat(len));
       expect(size).toBeLessThanOrEqual(prev);
       prev = size;
+    }
+  });
+
+  test("cover lines break at word boundaries instead of splitting a compound", () => {
+    const lines = coverTitleLines("把阅读的空间还给文字");
+    expect(lines.length).toBeGreaterThan(1);
+    expect(lines.join("")).toBe("把阅读的空间还给文字");
+    for (const line of lines) {
+      expect(line.startsWith("间")).toBe(false);
+      expect(line.endsWith("空")).toBe(false);
     }
   });
 

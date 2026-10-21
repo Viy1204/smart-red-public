@@ -8,6 +8,7 @@ import {
   type TemplateId,
 } from "./utils";
 import { HEADER_RESERVE_BASE_PX, FOOTER_CONTENT_RESERVE_PX } from "../template-renderer";
+import { FRESH_DESIGN, DEFAULT_FRESH_READING, freshHeadingSizes } from "../typography";
 
 const SYSTEM_SANS = `-apple-system, BlinkMacSystemFont, "SF Pro Display", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif`;
 const SYSTEM_SERIF = `"Songti SC", "STSong", "Noto Serif CJK SC", "Source Han Serif SC", Georgia, serif`;
@@ -202,8 +203,8 @@ th {
 .card-chrome {
   position: absolute;
   z-index: 3;
-  left: var(--pad);
-  right: var(--pad);
+  left: var(--pad-x, var(--pad));
+  right: var(--pad-x, var(--pad));
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -393,6 +394,7 @@ th {
 function makeTemplate(config: {
   name: TemplateId;
   displayName: string;
+  description?: string;
   className: string;
   padding: number;
   baseFontSize: number;
@@ -408,6 +410,7 @@ function makeTemplate(config: {
 ${BASE_STYLES}
 .${config.className} {
   --pad: ${config.padding}px;
+  --pad-x: ${config.padding}px;
   --sans: ${SYSTEM_SANS};
   --serif: ${SYSTEM_SERIF};
   --mono: ${SYSTEM_MONO};
@@ -416,6 +419,8 @@ ${BASE_STYLES}
   width: 1080px;
   height: 1440px;
   padding: ${config.padding}px;
+  padding-left: var(--pad-x);
+  padding-right: var(--pad-x);
   padding-top: calc(${config.padding}px + var(--top-safe, 0px) + var(--header-reserve, ${HEADER_RESERVE_BASE_PX}px));
   padding-bottom: calc(${config.padding}px + var(--footer-reserve, ${FOOTER_CONTENT_RESERVE_PX}px));
   box-sizing: border-box;
@@ -439,6 +444,7 @@ ${config.extras || ""}
   return {
     name: config.name,
     displayName: config.displayName,
+    description: config.description,
     cardClassName: config.className,
     cardPadding: config.padding,
     baseFontSize: config.baseFontSize,
@@ -462,7 +468,8 @@ ${config.extras || ""}
 
 export const editorialTemplate = makeTemplate({
   name: "editorial",
-  displayName: "Editorial",
+  displayName: "编辑纸",
+  description: "温暖纸张与细网格，适合深度长文。",
   className: "sr-editorial-card",
   padding: 78,
   baseFontSize: 31,
@@ -526,7 +533,8 @@ export const editorialTemplate = makeTemplate({
 
 export const monochromeTemplate = makeTemplate({
   name: "monochrome",
-  displayName: "Monochrome",
+  displayName: "黑白报告",
+  description: "黑白研究报告，信息密度高。",
   className: "sr-monochrome-card",
   padding: 74,
   baseFontSize: 30,
@@ -577,7 +585,8 @@ export const monochromeTemplate = makeTemplate({
 
 export const neoGridTemplate = makeTemplate({
   name: "neo-grid",
-  displayName: "Neo Grid",
+  displayName: "新网格",
+  description: "设计网格与荧光高亮，适合结构化观点。",
   className: "sr-neo-grid-card",
   padding: 64,
   baseFontSize: 29,
@@ -637,7 +646,8 @@ export const neoGridTemplate = makeTemplate({
 
 export const warmZineTemplate = makeTemplate({
   name: "warm-zine",
-  displayName: "Warm Zine",
+  displayName: "暖调小志",
+  description: "手作小志质感，适合个人叙事。",
   className: "sr-warm-zine-card",
   padding: 72,
   baseFontSize: 31,
@@ -698,7 +708,8 @@ export const warmZineTemplate = makeTemplate({
 
 export const noirMagazineTemplate = makeTemplate({
   name: "noir-magazine",
-  displayName: "Noir Magazine",
+  displayName: "深夜杂志",
+  description: "深色杂志版式，适合夜间与强情绪内容。",
   className: "sr-noir-card",
   padding: 76,
   baseFontSize: 30,
@@ -757,7 +768,8 @@ export const noirMagazineTemplate = makeTemplate({
 
 export const ivoryEssayTemplate = makeTemplate({
   name: "ivory-essay",
-  displayName: "Ivory Essay",
+  displayName: "象牙随笔",
+  description: "象牙纸面，适合长篇阅读。",
   className: "sr-ivory-essay-card",
   padding: 76,
   baseFontSize: 31,
@@ -809,7 +821,8 @@ export const ivoryEssayTemplate = makeTemplate({
 
 export const redLedgerTemplate = makeTemplate({
   name: "red-ledger",
-  displayName: "Red Ledger",
+  displayName: "红册",
+  description: "红色账本感，适合清单与复盘。",
   className: "sr-red-ledger-card",
   padding: 70,
   baseFontSize: 30,
@@ -858,7 +871,8 @@ export const redLedgerTemplate = makeTemplate({
 
 export const slateJournalTemplate = makeTemplate({
   name: "slate-journal",
-  displayName: "Slate Journal",
+  displayName: "石板手记",
+  description: "石板灰手记，冷静克制。",
   className: "sr-slate-journal-card",
   padding: 72,
   baseFontSize: 30,
@@ -905,7 +919,8 @@ export const slateJournalTemplate = makeTemplate({
 
 export const pearlMagazineTemplate = makeTemplate({
   name: "pearl-magazine",
-  displayName: "Pearl Magazine",
+  displayName: "珍珠杂志",
+  description: "珍珠白杂志，轻盈精致。",
   className: "sr-pearl-magazine-card",
   padding: 76,
   baseFontSize: 31,
@@ -955,7 +970,8 @@ export const pearlMagazineTemplate = makeTemplate({
 
 export const inkReportTemplate = makeTemplate({
   name: "ink-report",
-  displayName: "Ink Report",
+  displayName: "墨色报告",
+  description: "墨色报告，正式克制。",
   className: "sr-ink-report-card",
   padding: 72,
   baseFontSize: 30,
@@ -1009,7 +1025,8 @@ export const inkReportTemplate = makeTemplate({
 
 export const claudeTemplate = makeTemplate({
   name: "claude",
-  displayName: "Claude",
+  displayName: "Claude · 暖奶油",
+  description: "奶油纸面、衬线标题与珊瑚色强调。",
   className: "sr-claude-card",
   padding: 78,
   baseFontSize: 31,
@@ -1070,7 +1087,8 @@ export const claudeTemplate = makeTemplate({
 
 export const minimaxTemplate = makeTemplate({
   name: "minimax",
-  displayName: "MiniMax",
+  displayName: "MiniMax · 极简",
+  description: "纯白近黑，角落多彩渐变。",
   className: "sr-minimax-card",
   padding: 74,
   baseFontSize: 30,
@@ -1122,7 +1140,8 @@ export const minimaxTemplate = makeTemplate({
 
 export const xaiTemplate = makeTemplate({
   name: "xai",
-  displayName: "xAI",
+  displayName: "xAI · 暮色",
+  description: "近黑画布、日落渐变与等宽标题。",
   className: "sr-xai-card",
   padding: 76,
   baseFontSize: 30,
@@ -1171,7 +1190,8 @@ export const xaiTemplate = makeTemplate({
 
 export const lovableTemplate = makeTemplate({
   name: "lovable",
-  displayName: "Lovable",
+  displayName: "Lovable · 暖纸",
+  description: "暖羊皮纸与圆润人文字体。",
   className: "sr-lovable-card",
   padding: 80,
   baseFontSize: 31,
@@ -1233,7 +1253,8 @@ export const lovableTemplate = makeTemplate({
 
 export const notionTemplate = makeTemplate({
   name: "notion",
-  displayName: "Notion",
+  displayName: "Notion · 三色",
+  description: "三色柔和标题块与灰色提示框。",
   className: "sr-notion-card",
   padding: 74,
   baseFontSize: 30,
@@ -1332,7 +1353,8 @@ export const notionTemplate = makeTemplate({
 
 export const figmaTemplate = makeTemplate({
   name: "figma",
-  displayName: "Figma",
+  displayName: "Figma · 霓虹",
+  description: "黑白编辑器与霓虹高亮标题。",
   className: "sr-figma-card",
   padding: 72,
   baseFontSize: 30,
@@ -1402,7 +1424,8 @@ export const figmaTemplate = makeTemplate({
 
 export const appleTemplate = makeTemplate({
   name: "apple",
-  displayName: "Apple",
+  displayName: "Apple · 留白",
+  description: "超大紧排标题与充足留白。",
   className: "sr-apple-card",
   padding: 88,
   baseFontSize: 32,
@@ -1459,7 +1482,8 @@ export const appleTemplate = makeTemplate({
 
 export const theVergeTemplate = makeTemplate({
   name: "the-verge",
-  displayName: "The Verge",
+  displayName: "The Verge · 酸绿",
+  description: "近黑底色、酸薄荷与紫外强调。",
   className: "sr-the-verge-card",
   padding: 74,
   baseFontSize: 30,
@@ -1512,7 +1536,8 @@ export const theVergeTemplate = makeTemplate({
 
 export const wiredTemplate = makeTemplate({
   name: "wired",
-  displayName: "Wired",
+  displayName: "Wired · 黑白",
+  description: "黑白杂志、高瘦衬线刊头与首字下沉。",
   className: "sr-wired-card",
   padding: 76,
   baseFontSize: 31,
@@ -1580,6 +1605,7 @@ export const wiredTemplate = makeTemplate({
 export const warmSunTemplate = makeTemplate({
   name: "warm-sun",
   displayName: "暖阳文艺",
+  description: "暖阳纸色，适合温和的随笔。",
   className: "sr-warm-sun-card",
   padding: 78,
   baseFontSize: 31,
@@ -1668,6 +1694,7 @@ const memoChromeTop: ChromeTopRenderer = () => `
 export const memoTemplate = makeTemplate({
   name: "memo",
   displayName: "备忘录",
+  description: "仿系统备忘录，轻松日常。",
   className: "sr-memo-card",
   padding: 72,
   baseFontSize: 31,
@@ -1740,7 +1767,512 @@ export const memoTemplate = makeTemplate({
 `,
 });
 
+export const dataBriefTemplate = makeTemplate({
+  name: "data-brief",
+  displayName: "数据简报",
+  description: "结构清楚的简报版式，适合分析、复盘和含表格的文章。",
+  className: "sr-data-brief-card",
+  padding: 72,
+  baseFontSize: 33,
+  lineHeightRatio: 1.66,
+  backgroundColor: "#F2F5F4",
+  chrome: { eyebrow: "工作简报", volume: "Smart RED" },
+  vars: `
+    --paper: #f2f5f4;
+    --heading: #17322d;
+    --body: #263a36;
+    --muted: #667c77;
+    --accent: #2e6b5f;
+    --accent-soft: #d7e5df;
+    --strong-color: #1f5a4f;
+    --highlight-color: #cfe4da;
+    --rule: #c8d7d1;
+    --hairline: #d6e1dd;
+    --chrome: #5e7a73;
+    --quote: #143f37;
+    --quote-bg: #e5f0eb;
+    --inline-code-bg: #e1ece7;
+    --code-bg: #17332d;
+    --code: #f1f7f4;
+    --table-head: #d7e5df;
+    --image-bg: #dce8e3;
+    --display: var(--sans);
+    --body-font: var(--sans);
+    --caption: var(--mono);
+    --h1: 58px;
+    --h2: 46px;
+    --h3: 38px;
+    --h4: 33px;
+    --quote-size: 31px;
+    --para-gap: 24px;
+  `,
+  extras: `
+.sr-data-brief-card .card-chrome { text-transform: none; letter-spacing: 0.02em; }
+.sr-data-brief-card .card-chrome.top {
+  border-bottom: 3px solid var(--accent);
+  padding-bottom: 18px;
+}
+.sr-data-brief-card .card-chrome.bottom { border-top: 1px solid var(--rule); }
+.sr-data-brief-card .card-chrome.top .article-title-chrome {
+  font-family: var(--mono);
+  font-size: calc(var(--chrome-size) * 0.82);
+}
+.sr-data-brief-card h1 { letter-spacing: -0.5px; }
+.sr-data-brief-card h2 {
+  border-top: 2px solid var(--rule);
+  padding-top: 18px;
+  letter-spacing: -0.3px;
+}
+.sr-data-brief-card h2::before {
+  content: "§";
+  margin-right: 0.35em;
+  color: var(--accent);
+  font-family: var(--mono);
+  font-size: 0.6em;
+  vertical-align: 0.18em;
+}
+.sr-data-brief-card blockquote {
+  border: 0;
+  border-left: 8px solid var(--accent);
+  background: var(--quote-bg);
+  padding: 22px 26px;
+  font-family: var(--sans);
+  font-size: var(--quote-size);
+}
+.sr-data-brief-card blockquote::before {
+  content: "要点";
+  display: block;
+  margin-bottom: 8px;
+  font: 700 16px/1 var(--mono);
+  letter-spacing: 0.16em;
+  color: var(--accent);
+}
+.sr-data-brief-card ul li::before {
+  width: 10px;
+  height: 10px;
+  top: 0.72em;
+  border-radius: 1px;
+}
+.sr-data-brief-card ol li::before { font-weight: 700; }
+.sr-data-brief-card table { border-top: 3px solid var(--accent); font-size: 0.78em; }
+.sr-data-brief-card th {
+  font-family: var(--mono);
+  font-size: 0.72em;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.sr-data-brief-card td { border-left: 0; border-right: 0; }
+.sr-data-brief-card .code-block { border-left: 6px solid var(--accent); }
+.sr-data-brief-card .cover-title { letter-spacing: 0; }
+.sr-data-brief-card .cover-flow::before {
+  content: "工作简报 · 数据复盘";
+  display: block;
+  padding-bottom: 20px;
+  border-bottom: 3px solid var(--accent);
+  font-family: var(--mono);
+  font-size: var(--chrome-size);
+  letter-spacing: 0.12em;
+  color: var(--accent);
+}
+`,
+});
+
+export const letterTemplate = makeTemplate({
+  name: "letter",
+  displayName: "手写信笺",
+  description: "纸面与手写体气质，适合叙事、个人故事和长信。",
+  className: "sr-letter-card",
+  padding: 84,
+  baseFontSize: 33,
+  lineHeightRatio: 1.9,
+  backgroundColor: "#FBF7EF",
+  chrome: { eyebrow: "手记", volume: "Smart RED" },
+  vars: `
+    --paper: #fbf7ef;
+    --heading: #2f2a24;
+    --body: #3c362e;
+    --muted: #8b7f6d;
+    --accent: #a6532f;
+    --accent-soft: #e8d3c3;
+    --strong-color: #8c4326;
+    --highlight-color: #f0dfc8;
+    --rule: #ded2c0;
+    --hairline: #e4d9c8;
+    --chrome: #8b7f6d;
+    --quote: #5c4b3a;
+    --quote-bg: transparent;
+    --inline-code-bg: #efe3d2;
+    --code-bg: #2f2a24;
+    --code: #fbf7ef;
+    --table-head: #f0e5d4;
+    --image-bg: #efe4d3;
+    --display: var(--serif);
+    --body-font: "LXGW WenKai", "LXGW WenKai Screen", "Kaiti SC", "KaiTi", "Songti SC", serif;
+    --caption: var(--serif);
+    --h1: 56px;
+    --h2: 46px;
+    --h3: 38px;
+    --h4: 33px;
+    --quote-size: 35px;
+    --para-gap: 26px;
+  `,
+  extras: `
+.sr-letter-card::before {
+  inset: 0;
+  background: linear-gradient(90deg, transparent 0 78px, rgba(166, 83, 47, 0.09) 78px 79px, transparent 79px);
+}
+.sr-letter-card::after { content: none; }
+.sr-letter-card .card-chrome {
+  text-transform: none;
+  font-family: var(--caption);
+  letter-spacing: 0.08em;
+}
+.sr-letter-card .card-chrome.top { border-bottom: 1px solid var(--rule); }
+.sr-letter-card .card-chrome.bottom { border-top: 1px solid var(--rule); }
+.sr-letter-card h1,
+.sr-letter-card h2 { font-weight: 600; }
+.sr-letter-card h2 {
+  border-bottom: 1px solid var(--accent-soft);
+  padding-bottom: 10px;
+}
+.sr-letter-card p { text-indent: 2em; }
+.sr-letter-card blockquote {
+  position: relative;
+  border: 0;
+  padding: 4px 0 4px 34px;
+  background: transparent;
+  font-family: var(--caption);
+  color: var(--quote);
+}
+.sr-letter-card blockquote::before {
+  content: "“";
+  position: absolute;
+  left: 0;
+  top: -0.14em;
+  color: var(--accent-soft);
+  font-family: var(--serif);
+  font-size: 2.2em;
+  line-height: 1;
+}
+.sr-letter-card ul li::before {
+  width: 12px;
+  height: 2px;
+  top: 0.95em;
+  background: var(--accent);
+}
+.sr-letter-card ol li::before { font-weight: 700; }
+.sr-letter-card table { font-size: 0.78em; }
+.sr-letter-card th {
+  background: transparent;
+  border-bottom: 2px solid var(--accent-soft);
+}
+.sr-letter-card .image-block img {
+  border: 8px solid #ffffff;
+  box-shadow: 0 6px 18px rgba(60, 45, 30, 0.16);
+}
+.sr-letter-card .cover-title { letter-spacing: 0; }
+.sr-letter-card .cover-flow::before {
+  content: "见字如面";
+  display: block;
+  padding-bottom: 24px;
+  border-bottom: 1px solid var(--accent-soft);
+  font-family: var(--caption);
+  font-size: var(--chrome-size);
+  letter-spacing: 0.24em;
+  color: var(--accent);
+}
+.sr-letter-card .cover-title { font-weight: 600; }
+.sr-letter-card .cover-underline { width: 150px; height: 10px; }
+`,
+});
+
+export const dossierTemplate = makeTemplate({
+  name: "dossier",
+  displayName: "档案夹",
+  description: "案卷式版式，适合案例复盘、调查和带备注的长文。",
+  className: "sr-dossier-card",
+  padding: 70,
+  baseFontSize: 31,
+  lineHeightRatio: 1.7,
+  backgroundColor: "#EEECE6",
+  chrome: { eyebrow: "案卷", volume: "Smart RED" },
+  vars: `
+    --paper: #eeece6;
+    --heading: #1c242a;
+    --body: #2a3339;
+    --muted: #6e787d;
+    --accent: #a33b31;
+    --accent-soft: #d9c3be;
+    --strong-color: #8e2f27;
+    --highlight-color: #e8d9b8;
+    --rule: #bdb9ae;
+    --hairline: #d2cec4;
+    --chrome: #5e6a70;
+    --quote: #2a3339;
+    --quote-bg: #e5e2da;
+    --inline-code-bg: #e2ded4;
+    --code-bg: #1c242a;
+    --code: #eeece6;
+    --table-head: #ddd9cf;
+    --image-bg: #ddd9cf;
+    --display: var(--sans);
+    --body-font: var(--sans);
+    --caption: var(--mono);
+    --h1: 56px;
+    --h2: 44px;
+    --h3: 36px;
+    --h4: 31px;
+    --quote-size: 31px;
+    --para-gap: 22px;
+  `,
+  extras: `
+.sr-dossier-card::before {
+  inset: 0 auto 0 0;
+  width: 10px;
+  background: var(--accent);
+}
+.sr-dossier-card::after { content: none; }
+.sr-dossier-card .card-chrome { letter-spacing: 0.14em; }
+.sr-dossier-card .card-chrome.top {
+  border-bottom: 3px double var(--rule);
+  padding-bottom: 18px;
+}
+.sr-dossier-card .card-chrome.bottom { border-top: 3px double var(--rule); }
+.sr-dossier-card h1 { letter-spacing: -0.5px; }
+.sr-dossier-card h2 {
+  border-left: 6px solid var(--accent);
+  padding-left: 18px;
+}
+.sr-dossier-card blockquote {
+  position: relative;
+  border: 1px dashed var(--rule);
+  background: var(--quote-bg);
+  padding: 28px;
+  font-family: var(--sans);
+}
+.sr-dossier-card blockquote::before {
+  content: "备注";
+  position: absolute;
+  top: -12px;
+  left: 18px;
+  padding: 0 8px;
+  background: var(--paper);
+  color: var(--accent);
+  font: 700 15px/1.6 var(--mono);
+  letter-spacing: 0.16em;
+}
+.sr-dossier-card ul li::before {
+  width: 12px;
+  height: 2px;
+  top: 0.9em;
+  background: var(--accent);
+}
+.sr-dossier-card ol li::before { font-weight: 700; }
+.sr-dossier-card table { border: 2px solid var(--rule); }
+.sr-dossier-card th {
+  background: transparent;
+  border-bottom: 2px solid var(--accent);
+  letter-spacing: 0.08em;
+}
+.sr-dossier-card td { border-left: 0; border-right: 0; }
+.sr-dossier-card .code-block { border-left: 6px solid var(--accent); }
+.sr-dossier-card .cover-title { letter-spacing: 0; }
+.sr-dossier-card .cover-flow::before {
+  content: "案卷 · 内部复盘";
+  display: block;
+  padding-bottom: 20px;
+  border-bottom: 3px double var(--rule);
+  font-family: var(--mono);
+  font-size: var(--chrome-size);
+  letter-spacing: 0.16em;
+  color: var(--accent);
+}
+`,
+});
+
+const freshSizes = freshHeadingSizes(DEFAULT_FRESH_READING.fontSize);
+
+export const freshEditorialTemplate = makeTemplate({
+  name: "fresh-editorial",
+  displayName: "清爽编辑版",
+  description: "冷浅灰正文与青灰封面，阅读档位可切换。",
+  className: "sr-fresh-editorial-card",
+  padding: FRESH_DESIGN.padding,
+  baseFontSize: DEFAULT_FRESH_READING.fontSize,
+  lineHeightRatio: FRESH_DESIGN.lineHeight,
+  backgroundColor: FRESH_DESIGN.paper,
+  headerReserveMinPx: 72,
+  chrome: { eyebrow: "阅读手记", volume: "Smart RED" },
+  vars: `
+    --paper: ${FRESH_DESIGN.paper};
+    --cover-paper: ${FRESH_DESIGN.coverPaper};
+    --heading: ${FRESH_DESIGN.body};
+    --body: ${FRESH_DESIGN.body};
+    --muted: ${FRESH_DESIGN.muted};
+    --accent: ${FRESH_DESIGN.accent};
+    --accent-soft: ${FRESH_DESIGN.highlight};
+    --strong-color: ${FRESH_DESIGN.strong};
+    --highlight-color: ${FRESH_DESIGN.highlight};
+    --rule: ${FRESH_DESIGN.rule};
+    --hairline: ${FRESH_DESIGN.rule};
+    --chrome: ${FRESH_DESIGN.muted};
+    --quote: ${FRESH_DESIGN.strong};
+    --quote-bg: transparent;
+    --inline-code-bg: ${FRESH_DESIGN.highlight};
+    --code-bg: ${FRESH_DESIGN.body};
+    --code: ${FRESH_DESIGN.paper};
+    --table-head: ${FRESH_DESIGN.highlight};
+    --image-bg: ${FRESH_DESIGN.coverPaper};
+    --display: ${FRESH_DESIGN.displayFont};
+    --body-font: ${FRESH_DESIGN.bodyFont};
+    --caption: ${FRESH_DESIGN.bodyFont};
+    --h1: ${freshSizes[0]}px;
+    --h2: ${freshSizes[1]}px;
+    --h3: ${freshSizes[2]}px;
+    --h4: ${freshSizes[3]}px;
+    --quote-size: 1em;
+    --para-gap: ${DEFAULT_FRESH_READING.spacing}px;
+    --chrome-size: ${DEFAULT_FRESH_READING.chromeFontSize}px;
+    --chrome-transform: none;
+    --space-1: 8px;
+    --space-2: 16px;
+    --space-3: 24px;
+    --space-4: 32px;
+    --space-5: 48px;
+    --space-6: 64px;
+  `,
+  extras: `
+.sr-fresh-editorial-card {
+  display: flex;
+  flex-direction: column;
+  padding: var(--pad) var(--pad-x, var(--pad));
+  padding-top: calc(var(--pad) + var(--top-safe, 0px));
+  overflow-wrap: anywhere;
+}
+.sr-fresh-editorial-card::before,
+.sr-fresh-editorial-card::after { content: none; }
+.sr-fresh-editorial-card .article-flow {
+  order: 1;
+  flex: 1 1 0;
+  min-height: 0;
+  height: auto;
+}
+.sr-fresh-editorial-card .card-chrome {
+  position: static;
+  flex: none;
+  min-width: 0;
+  text-transform: none;
+}
+.sr-fresh-editorial-card .card-chrome.top {
+  order: 0;
+  min-height: var(--header-reserve);
+  align-items: flex-start;
+  padding-bottom: var(--space-2);
+  border-bottom: none;
+  line-height: 1.25;
+}
+.sr-fresh-editorial-card .card-chrome.bottom {
+  order: 2;
+  min-height: var(--footer-reserve);
+  padding-top: var(--space-1);
+  gap: var(--space-3);
+}
+.sr-fresh-editorial-card .article-title-chrome { max-width: 52%; }
+.sr-fresh-editorial-card h1,
+.sr-fresh-editorial-card h2 {
+  font-weight: 700;
+  line-height: ${FRESH_DESIGN.headingLineHeight};
+  margin: 1.05em 0 0.55em;
+  text-wrap: balance;
+}
+.sr-fresh-editorial-card h3,
+.sr-fresh-editorial-card h4,
+.sr-fresh-editorial-card h5,
+.sr-fresh-editorial-card h6 {
+  line-height: ${FRESH_DESIGN.headingLineHeight};
+  font-weight: 700;
+  margin: 0.85em 0 0.45em;
+}
+.sr-fresh-editorial-card .article-flow > :first-child { margin-top: 0; }
+.sr-fresh-editorial-card p { text-align: left; }
+.sr-fresh-editorial-card strong { font-weight: 700; }
+.sr-fresh-editorial-card mark { box-decoration-break: clone; -webkit-box-decoration-break: clone; }
+.sr-fresh-editorial-card li { margin-bottom: 0.4em; padding-left: 1.15em; }
+.sr-fresh-editorial-card ul li::before {
+  width: 0.2em;
+  height: 0.2em;
+  top: 0.78em;
+  left: 0.36em;
+  border-radius: 50%;
+}
+.sr-fresh-editorial-card ol li::before { font-size: 0.56em; top: 0.35em; }
+.sr-fresh-editorial-card .task-item { padding-left: 0; gap: 0.5em; }
+.sr-fresh-editorial-card .task-item > span { display: block; }
+.sr-fresh-editorial-card .task-box { margin-top: 0.4em; }
+.sr-fresh-editorial-card blockquote {
+  font-family: var(--body-font);
+  font-size: var(--quote-size);
+  line-height: ${FRESH_DESIGN.lineHeight};
+  margin: 0.8em 0;
+  padding: 0.65em 0.9em;
+  border: 0;
+  border-left: 4px solid var(--accent);
+  background: rgba(49, 92, 103, 0.055);
+}
+.sr-fresh-editorial-card table { font-size: 0.78em; line-height: 1.5; }
+.sr-fresh-editorial-card th,
+.sr-fresh-editorial-card td { padding: 0.5em 0.55em; overflow-wrap: anywhere; }
+.sr-fresh-editorial-card th { background: var(--accent-soft); }
+.sr-fresh-editorial-card .code-block pre { font-size: 0.76em; }
+.sr-fresh-editorial-card .image-block figcaption,
+.sr-fresh-editorial-card .code-block figcaption { font-size: var(--chrome-size); }
+.sr-fresh-editorial-card.is-cover {
+  padding-top: calc(var(--pad) + var(--header-reserve));
+  padding-bottom: calc(var(--pad) + var(--footer-reserve));
+}
+.sr-fresh-editorial-card .cover-flow {
+  flex: 1 1 0;
+  min-height: 0;
+  height: auto;
+}
+.sr-fresh-editorial-card .cover-flow::before {
+  content: "阅读手记";
+  display: block;
+  padding-bottom: var(--space-3);
+  border-bottom: 2px solid var(--accent);
+  font-family: var(--caption);
+  font-size: var(--chrome-size);
+  color: var(--accent);
+  letter-spacing: 0.16em;
+}
+.sr-fresh-editorial-card .cover-title-box { padding-bottom: var(--space-4); }
+.sr-fresh-editorial-card .cover-title {
+  display: block;
+  overflow: visible;
+  -webkit-line-clamp: unset;
+  margin: 0;
+  font-weight: 700;
+  line-height: ${FRESH_DESIGN.headingLineHeight};
+  letter-spacing: 0;
+  overflow-wrap: anywhere;
+}
+.sr-fresh-editorial-card .cover-underline {
+  width: 120px;
+  height: var(--space-1);
+  margin-top: var(--space-4);
+}
+.sr-fresh-editorial-card .cover-profile { gap: var(--space-3); }
+.sr-fresh-editorial-card .cover-profile-name { font-size: 36px; }
+.sr-fresh-editorial-card .cover-profile-handle { font-size: var(--chrome-size); }
+.sr-fresh-editorial-card .cover-profile-copy { overflow-wrap: anywhere; }
+`,
+});
+
 export const templates = [
+  freshEditorialTemplate,
+  dataBriefTemplate,
+  letterTemplate,
+  dossierTemplate,
   editorialTemplate,
   monochromeTemplate,
   neoGridTemplate,
@@ -1765,6 +2297,10 @@ export const templates = [
 ] as const;
 
 export const templateMap: Record<TemplateId, Template> = {
+  "fresh-editorial": freshEditorialTemplate,
+  "data-brief": dataBriefTemplate,
+  letter: letterTemplate,
+  dossier: dossierTemplate,
   editorial: editorialTemplate,
   monochrome: monochromeTemplate,
   "neo-grid": neoGridTemplate,
@@ -1789,5 +2325,5 @@ export const templateMap: Record<TemplateId, Template> = {
 };
 
 export function getTemplate(id: string | undefined): Template {
-  return templateMap[(id as TemplateId) || "editorial"] || editorialTemplate;
+  return templateMap[(id as TemplateId) || "fresh-editorial"] || freshEditorialTemplate;
 }

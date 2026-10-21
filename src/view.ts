@@ -18,8 +18,21 @@ import { getTemplate, templates } from './templates/gallery';
 import { stripInlineMarkdown } from './templates/utils';
 import { buildRenderSegments } from './section-splitter';
 import type { SmartRedSettings } from './settings';
+import { DEFAULT_PALETTE, applyThemePreset, getPalette, templateTone } from './palettes';
+import { PaletteModal } from './palette-modal';
 import type { CoverRenderContext, Template, TemplateRenderContext } from './templates/types';
 import { BlockType, type SemanticBlock } from './types';
+
+import {
+  FRESH_DESIGN,
+  FRESH_TEMPLATE_ID,
+  READING_PRESETS,
+  freshHeadingSizes,
+  getActiveTypography,
+  normalizeFreshReading,
+  readingPresetId,
+  usesOwnPalette,
+} from './typography';
 
 export const VIEW_TYPE_SMART_RED = 'smart-red-preview';
 
@@ -106,7 +119,11 @@ export class RedView extends ItemView {
   private templateSelect: HTMLSelectElement | null = null;
   private fontSizeLabel: HTMLElement | null = null;
   private chromeSizeLabel: HTMLElement | null = null;
+  private sidePaddingLabel: HTMLElement | null = null;
+  private paletteBtn: HTMLButtonElement | null = null;
   private fontFamilySelect: HTMLSelectElement | null = null;
+  private readingPresetSelect: HTMLSelectElement | null = null;
+  private readingPresetLabel: HTMLLabelElement | null = null;
   private emptyStateEl: HTMLElement | null = null;
   private currentPageEl: HTMLElement | null = null;
   private resizeObserver: ResizeObserver | null = null;
@@ -136,7 +153,7 @@ export class RedView extends ItemView {
   }
 
   getDisplayText(): string {
-    return 'Smart RED Preview';
+    return 'Smart RED';
   }
 
   getIcon(): string {
@@ -159,15 +176,15 @@ export class RedView extends ItemView {
 
     this.lockBtn = navGroup.createEl('button', {
       cls: 'smart-red-tool-btn smart-red-lock-btn',
-      text: 'Lock',
-      attr: { title: 'Lock preview (edits will not refresh)' },
+      text: '锁定',
+      attr: { title: '锁定预览，编辑时不再刷新' },
     });
     this.lockBtn.addEventListener('click', () => this.toggleLock());
 
     this.coverBtn = navGroup.createEl('button', {
       cls: 'smart-red-tool-btn smart-red-cover-btn',
-      text: 'Cover',
-      attr: { title: 'Add a title cover page' },
+      text: '封面',
+      attr: { title: '添加标题封面' },
     });
     this.coverBtn.addEventListener('click', () => this.toggleCover());
     this.updateCoverButton();
@@ -175,7 +192,7 @@ export class RedView extends ItemView {
     const prevBtn = navGroup.createEl('button', {
       cls: 'smart-red-tool-btn',
       text: '‹',
-      attr: { title: 'Previous page' },
+      attr: { title: '上一页' },
     });
     prevBtn.addEventListener('click', () => this.prevPage());
 
@@ -187,29 +204,50 @@ export class RedView extends ItemView {
     const nextBtn = navGroup.createEl('button', {
       cls: 'smart-red-tool-btn',
       text: '›',
-      attr: { title: 'Next page' },
+      attr: { title: '下一页' },
     });
     nextBtn.addEventListener('click', () => this.nextPage());
 
     const templateGroup = navRow.createEl('div', { cls: 'smart-red-toolbar-group smart-red-template-group' });
     this.templateSelect = templateGroup.createEl('select', {
       cls: 'smart-red-template-select',
-      attr: { title: 'Card template' },
+      attr: { title: '选择模板' },
     }) as HTMLSelectElement;
     for (const template of templates) {
       const option = document.createElement('option');
       option.value = template.name;
       option.textContent = template.displayName;
+      if (template.description) option.title = template.description;
       this.templateSelect.appendChild(option);
     }
     this.templateSelect.value = this.pluginSettings.template;
     this.templateSelect.addEventListener('change', () => this.changeTemplate(this.templateSelect!.value));
 
+    this.paletteBtn = templateGroup.createEl('button', {
+      cls: 'smart-red-tool-btn smart-red-palette-btn',
+      attr: { title: '选择配色方案' },
+    });
+    this.paletteBtn.createEl('span', { cls: 'smart-red-palette-dot' });
+    this.paletteBtn.createEl('span', { text: '配色' });
+    this.paletteBtn.addEventListener('click', () => this.openPaletteModal());
+
     const typographyGroup = toolRow.createEl('div', { cls: 'smart-red-toolbar-group smart-red-typography-group' });
+    this.readingPresetLabel = typographyGroup.createEl('label', { cls: 'smart-red-reading-label' });
+    this.readingPresetLabel.createEl('span', { text: '阅读' });
+    this.readingPresetSelect = this.readingPresetLabel.createEl('select', {
+      cls: 'smart-red-reading-select',
+      attr: { 'aria-label': '清爽编辑版阅读档位' },
+    });
+    const customPreset = this.readingPresetSelect.createEl('option', { text: '自定义', value: 'custom' });
+    customPreset.disabled = true;
+    for (const [id, preset] of Object.entries(READING_PRESETS)) {
+      this.readingPresetSelect.createEl('option', { text: preset.label, value: id });
+    }
+    this.readingPresetSelect.addEventListener('change', () => this.changeReadingPreset(this.readingPresetSelect!.value));
     const fontDownBtn = typographyGroup.createEl('button', {
       cls: 'smart-red-tool-btn smart-red-font-step-btn',
       text: 'A-',
-      attr: { title: 'Decrease font size' },
+      attr: { title: '缩小正文字号' },
     });
     fontDownBtn.addEventListener('click', () => this.changeFontSize(-1));
 
@@ -221,14 +259,14 @@ export class RedView extends ItemView {
     const fontUpBtn = typographyGroup.createEl('button', {
       cls: 'smart-red-tool-btn smart-red-font-step-btn',
       text: 'A+',
-      attr: { title: 'Increase font size' },
+      attr: { title: '放大正文字号' },
     });
     fontUpBtn.addEventListener('click', () => this.changeFontSize(1));
 
     const chromeDownBtn = typographyGroup.createEl('button', {
       cls: 'smart-red-tool-btn smart-red-chrome-step-btn',
       text: 'H-',
-      attr: { title: 'Decrease header and footer size' },
+      attr: { title: '缩小页眉页脚字号' },
     });
     chromeDownBtn.addEventListener('click', () => this.changeChromeFontSize(-1));
 
@@ -240,13 +278,32 @@ export class RedView extends ItemView {
     const chromeUpBtn = typographyGroup.createEl('button', {
       cls: 'smart-red-tool-btn smart-red-chrome-step-btn',
       text: 'H+',
-      attr: { title: 'Increase header and footer size' },
+      attr: { title: '放大页眉页脚字号' },
     });
     chromeUpBtn.addEventListener('click', () => this.changeChromeFontSize(1));
 
+    const sideDownBtn = typographyGroup.createEl('button', {
+      cls: 'smart-red-tool-btn smart-red-side-step-btn',
+      text: '边-',
+      attr: { title: '缩小左右边距' },
+    });
+    sideDownBtn.addEventListener('click', () => this.changeSidePadding(-2));
+
+    this.sidePaddingLabel = typographyGroup.createEl('span', {
+      cls: 'smart-red-side-size-label',
+      text: `${this.effectiveSidePadding(getTemplate(this.pluginSettings.template))}px`,
+    });
+
+    const sideUpBtn = typographyGroup.createEl('button', {
+      cls: 'smart-red-tool-btn smart-red-side-step-btn',
+      text: '边+',
+      attr: { title: '放大左右边距' },
+    });
+    sideUpBtn.addEventListener('click', () => this.changeSidePadding(2));
+
     this.fontFamilySelect = typographyGroup.createEl('select', {
       cls: 'smart-red-font-select',
-      attr: { title: 'Card font' },
+      attr: { title: '正文字体' },
     }) as HTMLSelectElement;
     for (const font of FONT_OPTIONS) {
       const option = document.createElement('option');
@@ -260,22 +317,22 @@ export class RedView extends ItemView {
     const exportGroup = toolRow.createEl('div', { cls: 'smart-red-toolbar-group smart-red-export-group' });
     this.copyBtn = exportGroup.createEl('button', {
       cls: 'smart-red-tool-btn smart-red-export-btn',
-      text: 'Copy',
-      attr: { title: 'Copy current page as PNG' },
+      text: '复制',
+      attr: { title: '复制当前页为图片' },
     });
     this.copyBtn.addEventListener('click', () => this.copyCurrentPage());
 
     this.pngBtn = exportGroup.createEl('button', {
       cls: 'smart-red-tool-btn smart-red-export-btn',
       text: 'PNG',
-      attr: { title: 'Export current page as PNG' },
+      attr: { title: '导出当前页为 PNG' },
     });
     this.pngBtn.addEventListener('click', () => this.exportCurrentPage());
 
     this.zipBtn = exportGroup.createEl('button', {
       cls: 'smart-red-tool-btn smart-red-export-btn',
       text: 'ZIP',
-      attr: { title: 'Export all pages as ZIP' },
+      attr: { title: '导出全部页面为 ZIP' },
     });
     this.zipBtn.addEventListener('click', () => this.exportAllPages());
 
@@ -286,7 +343,7 @@ export class RedView extends ItemView {
 
     this.emptyStateEl = this.previewContainer.createEl('div', {
       cls: 'smart-red-empty',
-      text: 'Open a markdown note to preview',
+      text: '打开一篇 Markdown 笔记开始预览；单独一行 --- 可手动分页。',
     });
 
     const vaultModifyRef = (file: TFile) => {
@@ -357,19 +414,27 @@ export class RedView extends ItemView {
     return {
       ...settings,
       template: getTemplate(settings.template).name as SmartRedSettings['template'],
+      paletteId: settings.paletteId || 'template',
+      freshReading: normalizeFreshReading(settings.freshReading),
+      sidePadding: Math.min(160, Math.max(0, Math.round(settings.sidePadding || 0))),
+      avoidWidows: settings.avoidWidows !== false,
       fontSize: this.clampFontSize(settings.fontSize),
       chromeFontSize: this.clampChromeFontSize(settings.chromeFontSize),
     };
   }
 
+  private effectiveSidePadding(template: Template): number {
+    const value = Math.round(this.pluginSettings.sidePadding || 0);
+    return value > 0 ? value : template.cardPadding;
+  }
+
   private getRenderContext(): TemplateRenderContext {
     return {
-      fontSize: this.pluginSettings.fontSize,
-      chromeFontSize: this.pluginSettings.chromeFontSize,
+      ...getActiveTypography(this.pluginSettings),
       user: { ...this.pluginSettings.user, avatar: this.resolvedAvatar },
-      theme: this.pluginSettings.theme,
       sectionTitle: this.documentTitle,
       topSafeArea: this.pluginSettings.topSafeArea,
+      sidePadding: this.effectiveSidePadding(getTemplate(this.pluginSettings.template)),
     };
   }
 
@@ -411,14 +476,36 @@ export class RedView extends ItemView {
   }
 
   private updateTypographyControls(): void {
+    const fresh = this.pluginSettings.template === FRESH_TEMPLATE_ID;
+    const typography = getActiveTypography(this.pluginSettings);
     if (this.fontSizeLabel) {
-      this.fontSizeLabel.textContent = `${this.pluginSettings.fontSize}px`;
+      this.fontSizeLabel.textContent = `${typography.fontSize}px`;
     }
     if (this.chromeSizeLabel) {
-      this.chromeSizeLabel.textContent = `${this.pluginSettings.chromeFontSize}px`;
+      this.chromeSizeLabel.textContent = `${typography.chromeFontSize}px`;
+    }
+    if (this.sidePaddingLabel) {
+      this.sidePaddingLabel.textContent = `${this.effectiveSidePadding(getTemplate(this.pluginSettings.template))}px`;
+    }
+    this.updatePaletteButton();
+    if (this.readingPresetLabel) this.readingPresetLabel.hidden = !fresh;
+    if (this.readingPresetSelect) {
+      this.readingPresetSelect.value = readingPresetId(this.pluginSettings.freshReading);
     }
     if (this.fontFamilySelect) {
-      this.fontFamilySelect.value = this.pluginSettings.theme.fontFamily || '';
+      this.fontFamilySelect.hidden = usesOwnPalette(this.pluginSettings.template) && !fresh;
+      const fontFamily = fresh ? this.pluginSettings.freshReading.bodyFontFamily : this.pluginSettings.theme.fontFamily;
+      const custom = this.fontFamilySelect.querySelector('option[data-custom]');
+      custom?.remove();
+      if (fontFamily && !FONT_OPTIONS.some((font) => font.value === fontFamily)) {
+        this.fontFamilySelect.createEl('option', {
+          value: fontFamily,
+          text: '自定义字体',
+          attr: { 'data-custom': '' },
+        });
+      }
+      this.fontFamilySelect.value = fontFamily || '';
+      this.fontFamilySelect.setAttribute('aria-label', fresh ? '正文字体' : '字体');
       this.updateFontAvailability();
     }
   }
@@ -435,7 +522,7 @@ export class RedView extends ItemView {
     this.fontFamilySelect.toggleClass('is-fallback', !available);
     this.fontFamilySelect.setAttribute(
       'title',
-      available ? 'Card font' : `${selected?.label || 'Selected font'} not installed, fallback is used`
+      available ? '正文字体' : `${selected?.label || 'Selected font'} not installed, fallback is used`
     );
   }
 
@@ -445,13 +532,29 @@ export class RedView extends ItemView {
     }
   }
 
-  private async changeFontSize(delta: number): Promise<void> {
-    const fontSize = this.clampFontSize(this.pluginSettings.fontSize + delta);
-    if (fontSize === this.pluginSettings.fontSize) return;
+  private async changeReadingPreset(value: string): Promise<void> {
+    if (this.pluginSettings.template !== FRESH_TEMPLATE_ID || (value !== 'comfortable' && value !== 'compact')) return;
+    const preset = READING_PRESETS[value];
     this.pluginSettings = {
       ...this.pluginSettings,
-      fontSize,
+      freshReading: { ...this.pluginSettings.freshReading, fontSize: preset.fontSize, spacing: preset.spacing },
     };
+    this.lastRenderKey = null;
+    this.updateTypographyControls();
+    await this.persistSettings();
+    this.refreshPreview();
+  }
+
+  private async changeFontSize(delta: number): Promise<void> {
+    const fresh = this.pluginSettings.template === FRESH_TEMPLATE_ID;
+    const current = getActiveTypography(this.pluginSettings).fontSize;
+    const fontSize = fresh
+      ? Math.min(FRESH_DESIGN.maxFontSize, Math.max(FRESH_DESIGN.minFontSize, current + delta))
+      : this.clampFontSize(current + delta);
+    if (fontSize === current) return;
+    this.pluginSettings = fresh
+      ? { ...this.pluginSettings, freshReading: { ...this.pluginSettings.freshReading, fontSize } }
+      : { ...this.pluginSettings, fontSize };
     this.lastRenderKey = null;
     this.updateTypographyControls();
     await this.persistSettings();
@@ -459,26 +562,63 @@ export class RedView extends ItemView {
   }
 
   private async changeChromeFontSize(delta: number): Promise<void> {
-    const chromeFontSize = this.clampChromeFontSize(this.pluginSettings.chromeFontSize + delta);
-    if (chromeFontSize === this.pluginSettings.chromeFontSize) return;
-    this.pluginSettings = {
-      ...this.pluginSettings,
-      chromeFontSize,
-    };
+    const current = getActiveTypography(this.pluginSettings).chromeFontSize;
+    const chromeFontSize = this.clampChromeFontSize(current + delta);
+    if (chromeFontSize === current) return;
+    this.pluginSettings = this.pluginSettings.template === FRESH_TEMPLATE_ID
+      ? { ...this.pluginSettings, freshReading: { ...this.pluginSettings.freshReading, chromeFontSize } }
+      : { ...this.pluginSettings, chromeFontSize };
     this.lastRenderKey = null;
     this.updateTypographyControls();
     await this.persistSettings();
     this.refreshPreview();
   }
 
+  private async changeSidePadding(delta: number): Promise<void> {
+    const template = getTemplate(this.pluginSettings.template);
+    const current = this.effectiveSidePadding(template);
+    const sidePadding = Math.min(140, Math.max(40, current + delta));
+    if (sidePadding === current) return;
+    this.pluginSettings = { ...this.pluginSettings, sidePadding };
+    this.lastRenderKey = null;
+    this.updateTypographyControls();
+    await this.persistSettings();
+    this.refreshPreview();
+  }
+
+  private updatePaletteButton(): void {
+    if (!this.paletteBtn) return;
+    const preset = getPalette(this.pluginSettings.paletteId);
+    const accent = preset?.theme.accentColor;
+    const fallback = getTemplate(this.pluginSettings.template).backgroundColor;
+    this.paletteBtn.style.setProperty('--smart-red-palette-dot', accent || fallback);
+    this.paletteBtn.setAttribute(
+      'title',
+      preset && preset.id !== 'template' ? `配色：${preset.label}` : '选择配色方案'
+    );
+  }
+
+  private openPaletteModal(): void {
+    const template = getTemplate(this.pluginSettings.template);
+    new PaletteModal(
+      this.app,
+      template.backgroundColor,
+      template.displayName,
+      this.pluginSettings.paletteId ?? 'template',
+      async (preset) => {
+        applyThemePreset(this.pluginSettings, preset);
+        this.lastRenderKey = null;
+        await this.persistSettings();
+        this.updateTypographyControls();
+        this.refreshPreview();
+      }
+    ).open();
+  }
+
   private async changeFontFamily(fontFamily: string): Promise<void> {
-    this.pluginSettings = {
-      ...this.pluginSettings,
-      theme: {
-        ...this.pluginSettings.theme,
-        fontFamily,
-      },
-    };
+    this.pluginSettings = this.pluginSettings.template === FRESH_TEMPLATE_ID
+      ? { ...this.pluginSettings, freshReading: { ...this.pluginSettings.freshReading, bodyFontFamily: fontFamily } }
+      : { ...this.pluginSettings, theme: { ...this.pluginSettings.theme, fontFamily } };
     this.lastRenderKey = null;
     this.updateTypographyControls();
     await this.persistSettings();
@@ -505,31 +645,37 @@ export class RedView extends ItemView {
     this.coverBtn.toggleClass('is-active', enabled);
     this.coverBtn.setAttribute(
       'title',
-      enabled ? 'Cover page enabled' : 'Add a title cover page'
+      enabled ? '已启用封面' : '添加标题封面'
     );
   }
 
   private toggleLock(): void {
     this.isLocked = !this.isLocked;
     if (this.lockBtn) {
-      this.lockBtn.textContent = this.isLocked ? 'Locked' : 'Lock';
+      this.lockBtn.textContent = this.isLocked ? '已锁定' : '锁定';
       this.lockBtn.toggleClass('is-active', this.isLocked);
       this.lockBtn.setAttribute(
         'title',
-        this.isLocked ? 'Preview locked' : 'Lock preview (edits will not refresh)'
+        this.isLocked ? 'Preview locked' : '锁定预览，编辑时不再刷新'
       );
     }
   }
 
   private async changeTemplate(template: string): Promise<void> {
+    const nextTemplate = getTemplate(template);
     this.pluginSettings = {
       ...this.pluginSettings,
-      template: getTemplate(template).name as SmartRedSettings['template'],
+      template: nextTemplate.name as SmartRedSettings['template'],
     };
+    const palette = getPalette(this.pluginSettings.paletteId);
+    if (palette?.tone && palette.tone !== templateTone(nextTemplate.backgroundColor)) {
+      applyThemePreset(this.pluginSettings, DEFAULT_PALETTE);
+    }
     this.lastRenderKey = null;
     if (this.templateSelect) {
       this.templateSelect.value = this.pluginSettings.template;
     }
+    this.updateTypographyControls();
     await this.persistSettings();
     if (!this.isLocked) {
       this.refreshPreview();
@@ -552,7 +698,7 @@ export class RedView extends ItemView {
     if (activeFile && activeFile instanceof TFile && activeFile.extension === 'md') {
       this.refreshPreview();
     } else {
-      this.showEmptyState('Open a markdown note to preview');
+      this.showEmptyState('打开一篇 Markdown 笔记开始预览');
     }
   }
 
@@ -593,7 +739,7 @@ export class RedView extends ItemView {
       }
     }
     if (!activeFile || !(activeFile instanceof TFile) || activeFile.extension !== 'md') {
-      this.showEmptyState('Open a markdown note to preview');
+      this.showEmptyState('打开一篇 Markdown 笔记开始预览');
       return;
     }
 
@@ -603,7 +749,7 @@ export class RedView extends ItemView {
       const content = await this.app.vault.read(activeFile);
       if (seq !== this.renderSeq) return;
       if (!content.trim()) {
-        this.showEmptyState('Note is empty');
+        this.showEmptyState('笔记为空');
         return;
       }
 
@@ -621,7 +767,7 @@ export class RedView extends ItemView {
         activeFile
       );
       if (blocks.length === 0) {
-        this.showEmptyState('No renderable content found');
+        this.showEmptyState('没有可渲染的内容');
         return;
       }
       this.documentTitle = this.extractDocumentTitle(blocks, activeFile);
@@ -643,6 +789,7 @@ export class RedView extends ItemView {
             availableHeight,
             measure: measurer.measure,
             breakWidthFor: (block) => this.getParagraphBreakWidth(block),
+            avoidWidows: this.pluginSettings.avoidWidows !== false,
           });
           for (const decision of segmentDecisions) {
             this.decisions.push({
@@ -664,7 +811,7 @@ export class RedView extends ItemView {
       this.renderCurrentPage();
     } catch (err) {
       console.error('Smart RED: preview render failed', err);
-      this.showEmptyState('Error rendering preview');
+      this.showEmptyState('预览渲染失败');
     }
   }
 
@@ -690,7 +837,7 @@ export class RedView extends ItemView {
     const topPadding =
       cardPadding +
       topSafe +
-      computeHeaderReserve(user, this.pluginSettings.chromeFontSize, template.headerReserveMinPx ?? 0);
+      computeHeaderReserve(user, getActiveTypography(this.pluginSettings).chromeFontSize, template.headerReserveMinPx ?? 0);
     const bottomPadding = cardPadding + footerReservePx(user.showFooter !== false);
     return Math.max(0, CARD_HEIGHT - topPadding - bottomPadding - PAGE_SAFETY_PX);
   }
@@ -815,11 +962,11 @@ export class RedView extends ItemView {
     dispose: () => void;
   } {
     const template = getTemplate(this.pluginSettings.template);
-    const fontSize = this.pluginSettings.fontSize || template.baseFontSize;
-    const paragraphGap = this.pluginSettings.theme.spacing || 24;
+    const fontSize = getActiveTypography(this.pluginSettings).fontSize || template.baseFontSize;
+    const paragraphGap = getActiveTypography(this.pluginSettings).theme.spacing || 24;
     const lineHeightPx = fontSize * template.lineHeightRatio;
-    const contentWidth = CARD_WIDTH - 2 * template.cardPadding;
-    const cjkCharsPerLine = Math.max(8, Math.floor(contentWidth / (fontSize * 0.86)));
+    const contentWidth = CARD_WIDTH - 2 * this.effectiveSidePadding(template);
+    const cjkCharsPerLine = Math.max(8, Math.floor(contentWidth / (fontSize * (template.name === FRESH_TEMPLATE_ID ? 1 : 0.86))));
 
     let root: HTMLElement | null = null;
 
@@ -860,6 +1007,9 @@ export class RedView extends ItemView {
         chrome.setCssStyles({ display: 'none' });
       }
       flow.setCssStyles({ height: 'auto', overflow: 'visible' });
+      if (template.name === FRESH_TEMPLATE_ID) {
+        flow.setCssStyles({ flex: 'none' });
+      }
 
       const measured = this.measureElementHeight(flow, false);
       return measured > 0 ? measured : estimate(normalized);
@@ -881,8 +1031,8 @@ export class RedView extends ItemView {
     }
 
     const template = getTemplate(this.pluginSettings.template);
-    const fontSize = this.pluginSettings.fontSize || template.baseFontSize;
-    const contentWidth = CARD_WIDTH - 2 * template.cardPadding;
+    const fontSize = getActiveTypography(this.pluginSettings).fontSize || template.baseFontSize;
+    const contentWidth = CARD_WIDTH - 2 * this.effectiveSidePadding(template);
     // One CJK char is 1em wide (2 width units); no widening fudge so estimated
     // lines track rendered lines and splits can fill the page bottom tightly.
     return Math.max(16, Math.floor(contentWidth / fontSize) * 2);
@@ -890,8 +1040,8 @@ export class RedView extends ItemView {
 
   private withStableBlockMetadata(block: SemanticBlock, index: number): SemanticBlock {
     const template = getTemplate(this.pluginSettings.template);
-    const fontSize = this.pluginSettings.fontSize || template.baseFontSize;
-    const contentWidth = CARD_WIDTH - 2 * template.cardPadding;
+    const fontSize = getActiveTypography(this.pluginSettings).fontSize || template.baseFontSize;
+    const contentWidth = CARD_WIDTH - 2 * this.effectiveSidePadding(template);
     const splitCharsPerLine = Math.max(8, Math.floor(contentWidth / fontSize));
     const metadata = {
       ...block.metadata,
@@ -932,6 +1082,7 @@ export class RedView extends ItemView {
     contentWidth: number,
     charsPerLine: number
   ): { height: number; lines: number } {
+      const fresh = this.pluginSettings.template === FRESH_TEMPLATE_ID;
       const lines = this.estimateLines(block.content, charsPerLine);
       let height = Math.ceil(lines * lineHeightPx + paragraphGap);
       let measuredLines = lines;
@@ -939,13 +1090,14 @@ export class RedView extends ItemView {
       switch (block.type) {
         case BlockType.Heading: {
           const level = typeof block.metadata?.level === 'number' ? block.metadata.level : 2;
-          const headingScale = level <= 1 ? 1.78 : level === 2 ? 1.48 : 1.24;
-          const headingLineHeight = fontSize * headingScale * (level <= 2 ? 1.14 : 1.22);
+          const headingScale = fresh
+            ? freshHeadingSizes(fontSize)[Math.min(3, Math.max(0, level - 1))] / fontSize
+            : level <= 1 ? 1.78 : level === 2 ? 1.48 : 1.24;
+          const headingLineHeight = fontSize * headingScale * (fresh ? FRESH_DESIGN.headingLineHeight : level <= 2 ? 1.14 : 1.22);
           const headingChars = Math.max(6, Math.floor(charsPerLine / headingScale));
           measuredLines = this.estimateLines(block.content, headingChars);
-          // Bottom margin plus the top margin that survives collapsing with
-          // the previous paragraph's gap (see BASE_STYLES heading margins).
-          height = Math.ceil(measuredLines * headingLineHeight + (level <= 2 ? 50 : 32));
+          // Include the same heading margins used by the active template.
+          height = Math.ceil(measuredLines * headingLineHeight + (fresh ? (level <= 2 ? 72 : 56) : level <= 2 ? 50 : 32));
           break;
         }
         case BlockType.CodeBlock: {
@@ -966,11 +1118,11 @@ export class RedView extends ItemView {
         case BlockType.List: {
           const items = block.content.split('\n').filter((line) => line.trim()).length || 1;
           measuredLines = Math.max(items, lines);
-          height = Math.ceil(measuredLines * lineHeightPx + items * 14 + paragraphGap);
+          height = Math.ceil(measuredLines * lineHeightPx + items * (fresh ? 16 : 14) + paragraphGap);
           break;
         }
         case BlockType.Blockquote:
-          height = Math.ceil(lines * fontSize * 1.42 + 78);
+          height = Math.ceil(lines * fontSize * (fresh ? 1.6 : 1.42) + (fresh ? 116 : 78));
           break;
         case BlockType.HorizontalRule:
           measuredLines = 1;
@@ -1007,7 +1159,7 @@ export class RedView extends ItemView {
     root.setCssStyles({
       width: `${CARD_WIDTH}px`,
       height: 'auto',
-      backgroundColor: this.pluginSettings.theme.backgroundColor || templateBackgroundColor,
+      backgroundColor: getActiveTypography(this.pluginSettings).theme.backgroundColor || templateBackgroundColor,
     });
     document.body.appendChild(root);
     return root;
@@ -1074,7 +1226,7 @@ export class RedView extends ItemView {
     if (!page) {
       this.emptyStateEl = this.previewContainer.createEl('div', {
         cls: 'smart-red-empty',
-        text: 'No content to preview',
+        text: '没有可预览的内容',
       });
       this.updateNavIndicator();
       return;
@@ -1148,7 +1300,7 @@ export class RedView extends ItemView {
     exportRoot.setCssStyles({
       width: `${CARD_WIDTH}px`,
       minHeight: `${CARD_HEIGHT}px`,
-      backgroundColor: this.pluginSettings.theme.backgroundColor || templateBackgroundColor,
+      backgroundColor: getActiveTypography(this.pluginSettings).theme.backgroundColor || templateBackgroundColor,
     });
     document.body.appendChild(exportRoot);
     return exportRoot;
@@ -1186,7 +1338,7 @@ export class RedView extends ItemView {
     await this.withButtonState(this.copyBtn, 'Copying', async () => {
       const page = this.currentPage();
       if (!page) {
-        new Notice('No Smart RED page to copy');
+        new Notice('没有可复制的页面');
         return;
       }
 
@@ -1197,10 +1349,10 @@ export class RedView extends ItemView {
         const card = this.createExportCard(exportRoot, page, template);
         const blob = await this.exporter.renderToBlob(card, this.currentPageIndex);
         await copyPngBlobToClipboard(blob);
-        new Notice('Smart RED image copied');
+        new Notice('已复制当前页图片');
       } catch (err) {
         console.error('Smart RED: copy failed', err);
-        new Notice('Copy failed. PNG export is still available.');
+        new Notice('复制失败，可改用 PNG 导出。');
       } finally {
         exportRoot.remove();
       }
@@ -1211,7 +1363,7 @@ export class RedView extends ItemView {
     await this.withButtonState(this.pngBtn, 'Exporting', async () => {
       const page = this.currentPage();
       if (!page) {
-        new Notice('No Smart RED page to export');
+        new Notice('没有可导出的页面');
         return;
       }
 
@@ -1222,10 +1374,10 @@ export class RedView extends ItemView {
         const card = this.createExportCard(exportRoot, page, template);
         const blob = await this.exporter.renderToBlob(card, this.currentPageIndex);
         this.downloadBlob(blob, this.currentPageFileName(page));
-        new Notice('Smart RED PNG exported');
+        new Notice('PNG 已导出');
       } catch (err) {
         console.error('Smart RED: export failed', err);
-        new Notice('Smart RED export failed');
+        new Notice('导出失败');
       } finally {
         exportRoot.remove();
       }
@@ -1236,7 +1388,7 @@ export class RedView extends ItemView {
     await this.withButtonState(this.zipBtn, 'Exporting', async () => {
       const pages = this.getPages();
       if (pages.length === 0) {
-        new Notice('No Smart RED pages to export');
+        new Notice('没有可导出的页面');
         return;
       }
 
@@ -1249,10 +1401,10 @@ export class RedView extends ItemView {
 
         const blob = await this.exporter.exportAllPages(containers, this.documentTitle, hasCover);
         this.downloadBlob(blob, `${sanitizeFileName(this.documentTitle)}.zip`);
-        new Notice('Smart RED ZIP exported');
+        new Notice('ZIP 已导出');
       } catch (err) {
         console.error('Smart RED: export failed', err);
-        new Notice('Smart RED export failed');
+        new Notice('导出失败');
       } finally {
         exportRoot.remove();
       }

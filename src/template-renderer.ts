@@ -7,6 +7,7 @@ import type {
   TemplateUserInfo,
 } from "./templates/types";
 import { fitCoverTitle } from "./templates/utils";
+import { FRESH_DESIGN, FRESH_TEMPLATE_ID, freshHeadingSizes } from "./typography";
 
 export const CARD_WIDTH = 1080;
 export const CARD_HEIGHT = 1440;
@@ -98,10 +99,22 @@ export class TemplateRenderer {
     const theme = context?.theme;
     const fontSize = context?.fontSize;
     const chromeFontSize = context?.chromeFontSize;
+    if (template.name === FRESH_TEMPLATE_ID) {
+      const sizes = freshHeadingSizes(fontSize || template.baseFontSize);
+      cardEl.setCssProps({
+        "--h1": `${sizes[0]}px`,
+        "--h2": `${sizes[1]}px`,
+        "--h3": `${sizes[2]}px`,
+        "--h4": `${sizes[3]}px`,
+      });
+    }
     cardEl.setCssProps({
       "--header-reserve": `${computeHeaderReserve(context?.user, context?.chromeFontSize, template.headerReserveMinPx ?? 0)}px`,
       "--footer-reserve": `${footerReservePx(context?.user?.showFooter !== false)}px`,
       "--top-safe": `${Math.max(0, context?.topSafeArea ?? 0)}px`,
+      ...(context?.sidePadding && context.sidePadding > 0
+        ? { "--pad-x": `${Math.round(context.sidePadding)}px` }
+        : {}),
       ...(theme?.highlightColor ? { "--highlight-color": theme.highlightColor } : {}),
     });
     if (fontSize) {
@@ -116,6 +129,12 @@ export class TemplateRenderer {
         "--display": theme.fontFamily,
         "--caption": theme.fontFamily,
       });
+    }
+    if (theme?.bodyFontFamily) {
+      cardEl.setCssProps({ "--body-font": theme.bodyFontFamily, "--caption": theme.bodyFontFamily });
+    }
+    if (theme?.headingFontFamily) {
+      cardEl.setCssProps({ "--display": theme.headingFontFamily });
     }
     if (theme?.textColor) {
       cardEl.setCssProps({
@@ -141,6 +160,34 @@ export class TemplateRenderer {
     if (theme?.h1Color) cardEl.setCssProps({ "--h1-color": theme.h1Color });
     if (theme?.h2Color) cardEl.setCssProps({ "--h2-color": theme.h2Color });
     if (theme?.h3Color) cardEl.setCssProps({ "--h3-color": theme.h3Color });
+    // A palette changes more than text and background: the template's quote,
+    // table, code and rule surfaces must follow it or a dark palette leaves
+    // light patches behind. Derive those surfaces from the palette trio.
+    const paletteApplied = !!(theme?.textColor && theme?.backgroundColor);
+    if (paletteApplied) {
+      const background = theme?.backgroundColor || template.backgroundColor;
+      const foreground = theme?.textColor || "#23262b";
+      const accent = theme?.accentColor || foreground;
+      const soft = theme?.highlightColor || accent;
+      cardEl.setCssProps({
+        "--paper": background,
+        "--body": foreground,
+        "--heading": foreground,
+        "--quote": foreground,
+        "--accent": accent,
+        "--accent-soft": soft,
+        "--chrome": accent,
+        "--muted": accent,
+        "--quote-bg": soft,
+        "--inline-code-bg": soft,
+        "--table-head": soft,
+        "--image-bg": soft,
+        "--rule": soft,
+        "--hairline": soft,
+        "--code-bg": foreground,
+        "--code": background,
+      });
+    }
     if (typeof theme?.spacing === "number" && theme.spacing > 0) {
       cardEl.setCssProps({ "--para-gap": `${theme.spacing}px` });
     }
@@ -210,6 +257,17 @@ export class TemplateRenderer {
       "--footer-reserve": "110px",
     });
 
+    if (template.name === FRESH_TEMPLATE_ID) {
+      cardEl.classList.add("is-cover");
+      // A chosen palette must reach the cover too; the design's cool paper is
+      // only the fallback when no palette overrides the base colors.
+      const coverPaper =
+        context?.theme?.highlightColor ||
+        context?.theme?.backgroundColor ||
+        FRESH_DESIGN.coverPaper;
+      cardEl.setCssStyles({ backgroundColor: coverPaper });
+      cardEl.setCssProps({ "--paper": coverPaper, "--cover-paper": coverPaper });
+    }
     template.layoutCover(cardEl, context);
     return cardEl;
   }
@@ -220,7 +278,7 @@ export class TemplateRenderer {
     const titleEl = cardEl.querySelector(".cover-title") as HTMLElement | null;
     const boxEl = cardEl.querySelector(".cover-title-box") as HTMLElement | null;
     if (titleEl && boxEl) {
-      fitCoverTitle(titleEl, boxEl);
+      fitCoverTitle(titleEl, boxEl, cardEl.classList.contains("sr-fresh-editorial-card") ? 64 : undefined);
     }
   }
 

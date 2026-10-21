@@ -30,7 +30,7 @@ function scopeTemplateStyles(template) {
   }
 
   const baseStyles = raw.slice(baseStart + baseMarker.length, baseEnd).trim();
-  const templateStyles = raw.slice(baseEnd);
+  const templateStyles = raw.slice(baseEnd).replace(/[ \t]+$/gm, '');
 
   return [
     `.${template.cardClassName} {`,

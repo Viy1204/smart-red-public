@@ -1,8 +1,28 @@
-import { App, PluginSettingTab, Setting } from 'obsidian';
+import { App, PluginSettingTab, Setting, type DropdownComponent } from 'obsidian';
 import type SmartRedPlugin from './main';
 import { getTemplate, templates } from './templates/gallery';
 import type { TemplateId } from './templates/utils';
 import type { TemplateThemeOverrides, TemplateUserInfo } from './templates/types';
+import {
+  DEFAULT_PALETTE,
+  DEFAULT_PALETTE_ID,
+  THEME_PRESETS,
+  applyThemePreset,
+  getPalette,
+  templateTone,
+} from './palettes';
+
+export { THEME_PRESETS, type ThemePreset } from './palettes';
+import {
+  DEFAULT_FRESH_READING,
+  FRESH_DESIGN,
+  FRESH_TEMPLATE_ID,
+  READING_PRESETS,
+  getActiveTypography,
+  readingPresetId,
+  usesOwnPalette,
+  type FreshReadingSettings,
+} from './typography';
 
 export type HeadingSplitLevel = 'h1' | 'h2';
 
@@ -24,70 +44,22 @@ export interface SmartRedSettings {
   softLineBreaks: boolean;
   user: TemplateUserInfo;
   theme: TemplateThemeOverrides;
+  // 'template' keeps each design's own palette; 'custom' means the color
+  // fields were edited by hand; any other id is one of THEME_PRESETS.
+  paletteId: string;
+  freshReading: FreshReadingSettings;
   cover: CoverSettings;
   topSafeArea: number;
+  // 0 keeps the template's designed side padding; a positive value overrides
+  // the left and right padding for every card.
+  sidePadding: number;
+  avoidWidows: boolean;
   exportPixelRatio: number;
 }
 
-// One-click color palettes ported from note-to-red's built-in themes. They
-// fill the Custom Theme fields below; templates keep their own quote/code
-// backgrounds, so presets pair best with templates of matching lightness.
-export interface ThemePreset {
-  id: string;
-  label: string;
-  theme: Partial<TemplateThemeOverrides>;
-}
-
-export const THEME_PRESETS: ThemePreset[] = [
-  {
-    id: 'ntr-default',
-    label: '深夜备忘 (深)',
-    theme: { textColor: '#f2f2f7', backgroundColor: '#1c1c1e', accentColor: '#0a84ff', boldColor: '#0a84ff', highlightColor: '#183656', h1Color: '#f2f2f7', h2Color: '#f2f2f7', h3Color: '#f2f2f7' },
-  },
-  {
-    id: 'ntr-minimal',
-    label: '极简白',
-    theme: { textColor: '#333333', backgroundColor: '#ffffff', accentColor: '#6c9eb8', boldColor: '#4a4a4a', highlightColor: '#dae7ed', h1Color: '#333333', h2Color: '#333333', h3Color: '#333333' },
-  },
-  {
-    id: 'ntr-elegant',
-    label: '优雅紫黑 (深)',
-    theme: { textColor: '#c4b8dd', backgroundColor: '#1a1721', accentColor: '#b490ff', boldColor: '#b490ff', highlightColor: '#413559', h1Color: '#e2d9f3', h2Color: '#e2d9f3', h3Color: '#e2d9f3' },
-  },
-  {
-    id: 'ntr-cyber',
-    label: '赛博朋克',
-    theme: { textColor: '#333333', backgroundColor: '#ffffff', accentColor: '#00ffaa', boldColor: '#ff00ff', highlightColor: '#bfffea', h1Color: '#ff00ff', h2Color: '#ff00ff', h3Color: '#ff00ff' },
-  },
-  {
-    id: 'ntr-forest',
-    label: '森林清晨 (深)',
-    theme: { textColor: '#e8f5e9', backgroundColor: '#1a2420', accentColor: '#2ecc71', boldColor: '#2ecc71', highlightColor: '#1f4e34', h1Color: '#2ecc71', h2Color: '#2ecc71', h3Color: '#2ecc71' },
-  },
-  {
-    id: 'ntr-ocean',
-    label: '深海之境 (深)',
-    theme: { textColor: '#e6f7ff', backgroundColor: '#0a192f', accentColor: '#40a9ff', boldColor: '#40a9ff', highlightColor: '#183d63', h1Color: '#40a9ff', h2Color: '#40a9ff', h3Color: '#40a9ff' },
-  },
-  {
-    id: 'ntr-sakura',
-    label: '樱花飞舞 (深)',
-    theme: { textColor: '#fff5f7', backgroundColor: '#1f1a1d', accentColor: '#ff69b4', boldColor: '#ff69b4', highlightColor: '#572e43', h1Color: '#ffb6c1', h2Color: '#ffb6c1', h3Color: '#ffb6c1' },
-  },
-  {
-    id: 'ntr-starry',
-    label: '星空梦境 (深)',
-    theme: { textColor: '#f0e6ff', backgroundColor: '#0d0f1a', accentColor: '#9b59b6', boldColor: '#9b59b6', highlightColor: '#312241', h1Color: '#9370db', h2Color: '#9370db', h3Color: '#9370db' },
-  },
-  {
-    id: 'ntr-yueling',
-    label: '悦灵雅棕 (深)',
-    theme: { textColor: '#ffffff', backgroundColor: '#1c1c1e', accentColor: '#c57512', boldColor: '#c57512', highlightColor: '#46321b', h1Color: '#f2f2f7', h2Color: '#f2f2f7', h3Color: '#f2f2f7' },
-  },
-];
 
 export const DEFAULT_SETTINGS: SmartRedSettings = {
-  template: 'editorial',
+  template: FRESH_TEMPLATE_ID,
   fontSize: 31,
   chromeFontSize: 22,
   headingLevel: 'h2',
@@ -103,12 +75,16 @@ export const DEFAULT_SETTINGS: SmartRedSettings = {
     roundAvatar: true,
     verifiedBadge: false,
   },
+  paletteId: DEFAULT_PALETTE_ID,
+  freshReading: { ...DEFAULT_FRESH_READING },
   cover: {
-    enabled: false,
+    enabled: true,
     showAuthor: true,
     hideFirstHeading: true,
   },
   topSafeArea: 0,
+  sidePadding: 0,
+  avoidWidows: true,
   theme: {
     fontFamily: '',
     textColor: '',
@@ -145,6 +121,7 @@ export class SmartRedSettingTab extends PluginSettingTab {
       .addColorPicker((picker) =>
         picker.setValue(get() || '#888888').onChange(async (value) => {
           set(value);
+          this.plugin.settings.paletteId = 'custom';
           await this.plugin.saveSettings();
           this.plugin.refreshView();
         })
@@ -152,9 +129,10 @@ export class SmartRedSettingTab extends PluginSettingTab {
       .addExtraButton((button) =>
         button
           .setIcon('rotate-ccw')
-          .setTooltip('Reset to template default')
+          .setTooltip('恢复模板默认')
           .onClick(async () => {
             set('');
+            this.plugin.settings.paletteId = 'custom';
             await this.plugin.saveSettings();
             this.plugin.refreshView();
             this.display();
@@ -165,11 +143,16 @@ export class SmartRedSettingTab extends PluginSettingTab {
   display(): void {
     const { containerEl } = this;
     containerEl.empty();
-    new Setting(containerEl).setName('Template and Typography').setHeading();
+    const fresh = this.plugin.settings.template === FRESH_TEMPLATE_ID;
+    const ownPalette = usesOwnPalette(this.plugin.settings.template);
+    const reading = this.plugin.settings.freshReading;
+    const typography = getActiveTypography(this.plugin.settings);
+    let readingDropdown: DropdownComponent | undefined;
+    new Setting(containerEl).setName('模板与排版').setHeading();
 
     new Setting(containerEl)
-      .setName('Template')
-      .setDesc('Choose the card template style')
+      .setName('模板')
+      .setDesc('选择卡片模板；鼠标悬停可查看模板说明。')
       .addDropdown((dropdown) => {
         for (const template of templates) {
           dropdown.addOption(template.name, template.displayName);
@@ -177,46 +160,107 @@ export class SmartRedSettingTab extends PluginSettingTab {
         dropdown
           .setValue(getTemplate(this.plugin.settings.template).name)
           .onChange(async (value) => {
-            this.plugin.settings.template = value as SmartRedSettings['template'];
+            const nextTemplate = getTemplate(value);
+            this.plugin.settings.template = nextTemplate.name as SmartRedSettings['template'];
+            const palette = getPalette(this.plugin.settings.paletteId);
+            if (palette?.tone && palette.tone !== templateTone(nextTemplate.backgroundColor)) {
+              applyThemePreset(this.plugin.settings, DEFAULT_PALETTE);
+            }
             await this.plugin.saveSettings();
             this.plugin.refreshView();
+            this.display();
           });
       });
 
+    const selectedTemplate = getTemplate(this.plugin.settings.template);
+    if (selectedTemplate.description) {
+      containerEl.createEl('p', {
+        cls: 'setting-item-description',
+        text: selectedTemplate.description,
+      });
+    }
+
+    if (fresh) {
+      new Setting(containerEl)
+        .setName('阅读档位')
+        .setDesc('清爽编辑版独立保存字号与段距；更改正文后，标题会同步调整。')
+        .addDropdown((dropdown) => {
+          readingDropdown = dropdown;
+          dropdown.addOption('custom', '自定义');
+          dropdown.selectEl.options[0].disabled = true;
+          for (const [id, preset] of Object.entries(READING_PRESETS)) {
+            dropdown.addOption(id, preset.label);
+          }
+          dropdown.setValue(readingPresetId(reading)).onChange(async (value) => {
+            if (value !== 'comfortable' && value !== 'compact') return;
+            const preset = READING_PRESETS[value];
+            this.plugin.settings.freshReading = {
+              ...this.plugin.settings.freshReading,
+              fontSize: preset.fontSize,
+              spacing: preset.spacing,
+            };
+            await this.plugin.saveSettings();
+            this.plugin.refreshView();
+            this.display();
+          });
+        });
+
+      for (const field of [
+        { key: 'headingFontFamily' as const, name: '标题字体', fallback: FRESH_DESIGN.displayFont },
+        { key: 'bodyFontFamily' as const, name: '正文字体', fallback: FRESH_DESIGN.bodyFont },
+      ]) {
+        new Setting(containerEl)
+          .setName(field.name)
+          .setDesc('填写已安装字体的 CSS 字体栈；留空恢复默认。字体缺失时使用系统回退。')
+          .addText((text) => {
+            text.setPlaceholder(field.fallback).setValue(reading[field.key]);
+            text.inputEl.addEventListener('change', async () => {
+              this.plugin.settings.freshReading[field.key] = text.getValue().trim();
+              await this.plugin.saveSettings();
+              this.plugin.refreshView();
+            });
+          });
+      }
+    }
+
     new Setting(containerEl)
-      .setName('Font size')
-      .setDesc('Base font size for card content (px)')
+      .setName('正文字号')
+      .setDesc(fresh ? '1080px 画布中的字号；标题按比例联动，原有模板设置单独保留。' : '卡片正文的基础字号（px）')
       .addSlider((slider) => {
         slider
-          .setLimits(24, 42, 1)
-          .setValue(this.plugin.settings.fontSize)
+          .setLimits(fresh ? FRESH_DESIGN.minFontSize : 24, fresh ? FRESH_DESIGN.maxFontSize : 42, 1)
+          .setValue(typography.fontSize)
           .setDynamicTooltip()
           .onChange(async (value) => {
-            this.plugin.settings.fontSize = value;
+            if (fresh) {
+              this.plugin.settings.freshReading.fontSize = value;
+              readingDropdown?.setValue(readingPresetId(this.plugin.settings.freshReading));
+            } else this.plugin.settings.fontSize = value;
             await this.plugin.saveSettings();
             this.plugin.refreshView();
           });
       });
 
     new Setting(containerEl)
-      .setName('Header and footer size')
-      .setDesc('Font size for card chrome: author, title, footer and page number')
+      .setName('页眉与页脚字号')
+      .setDesc('作者、文章标题、页脚和页码的字号')
       .addSlider((slider) => {
         slider
-          .setLimits(14, 36, 1)
-          .setValue(this.plugin.settings.chromeFontSize)
+          .setLimits(14, fresh ? 32 : 36, 1)
+          .setValue(typography.chromeFontSize)
           .setDynamicTooltip()
           .onChange(async (value) => {
-            this.plugin.settings.chromeFontSize = value;
+            if (fresh) this.plugin.settings.freshReading.chromeFontSize = value;
+            else this.plugin.settings.chromeFontSize = value;
             await this.plugin.saveSettings();
             this.plugin.refreshView();
           });
       });
 
     new Setting(containerEl)
-      .setName('Keep single line breaks')
+      .setName('保留单行换行')
       .setDesc(
-        'A lone newline inside a paragraph shows as a line break, matching Obsidian with "Strict line breaks" off. Turn this off for CommonMark behaviour, where only two trailing spaces or a backslash break a line.'
+        '段落内单独一个换行也按换行显示，与关闭“严格换行”的 Obsidian 一致。关闭后按 CommonMark 处理：只有行尾两个空格或反斜杠才换行。'
       )
       .addToggle((toggle) => {
         toggle
@@ -229,14 +273,14 @@ export class SmartRedSettingTab extends PluginSettingTab {
       });
 
     containerEl.createEl('p', {
-      text: 'A line with only --- starts a new card. Copy exports the current page to your clipboard; PNG downloads the current page; ZIP exports every page.',
+      text: '单独一行 --- 会开始新的一页。复制导出当前页到剪贴板；PNG 导出当前页；ZIP 导出全部页面。',
     });
 
-    new Setting(containerEl).setName('User Info').setHeading();
+    new Setting(containerEl).setName('作者信息').setHeading();
 
     new Setting(containerEl)
-      .setName('Avatar')
-      .setDesc('Image shown in the card header — a URL, a vault file name/path, or a wiki embed like avatar.png')
+      .setName('头像')
+      .setDesc('显示在卡片页眉的图片：可填 URL、笔记库中的文件名/路径，或 avatar.png 形式的嵌入。')
       .addText((text) => {
         text
           .setValue(this.plugin.settings.user.avatar)
@@ -248,8 +292,8 @@ export class SmartRedSettingTab extends PluginSettingTab {
       });
 
     new Setting(containerEl)
-      .setName('Nickname')
-      .setDesc('Creator name shown in the card header')
+      .setName('昵称')
+      .setDesc('显示在卡片页眉的作者名')
       .addText((text) => {
         text
           .setValue(this.plugin.settings.user.nickname)
@@ -261,8 +305,8 @@ export class SmartRedSettingTab extends PluginSettingTab {
       });
 
     new Setting(containerEl)
-      .setName('Handle')
-      .setDesc('Social handle shown as @handle under the nickname (leading @ optional)')
+      .setName('账号')
+      .setDesc('显示在昵称下方的 @账号（开头 @ 可省略）')
       .addText((text) => {
         text
           .setValue(this.plugin.settings.user.handle ?? '')
@@ -274,8 +318,8 @@ export class SmartRedSettingTab extends PluginSettingTab {
       });
 
     new Setting(containerEl)
-      .setName('Verified badge')
-      .setDesc('Show a blue verified checkmark next to the nickname')
+      .setName('认证标记')
+      .setDesc('在昵称旁显示蓝色认证勾')
       .addToggle((toggle) => {
         toggle
           .setValue(this.plugin.settings.user.verifiedBadge ?? false)
@@ -287,8 +331,8 @@ export class SmartRedSettingTab extends PluginSettingTab {
       });
 
     new Setting(containerEl)
-      .setName('Subtitle')
-      .setDesc('Certification or short description under the nickname')
+      .setName('副标题')
+      .setDesc('昵称下方的认证信息或一句话简介')
       .addText((text) => {
         text
           .setValue(this.plugin.settings.user.subtitle)
@@ -300,8 +344,8 @@ export class SmartRedSettingTab extends PluginSettingTab {
       });
 
     new Setting(containerEl)
-      .setName('Footer')
-      .setDesc('Footer text shown on each page')
+      .setName('页脚')
+      .setDesc('每页底部显示的页脚文字')
       .addText((text) => {
         text
           .setValue(this.plugin.settings.user.footer)
@@ -313,8 +357,8 @@ export class SmartRedSettingTab extends PluginSettingTab {
       });
 
     new Setting(containerEl)
-      .setName('Show header')
-      .setDesc('Toggle the creator header at the top of each card')
+      .setName('显示页眉')
+      .setDesc('显示每页顶部的作者信息')
       .addToggle((toggle) => {
         toggle
           .setValue(this.plugin.settings.user.showHeader)
@@ -326,8 +370,8 @@ export class SmartRedSettingTab extends PluginSettingTab {
       });
 
     new Setting(containerEl)
-      .setName('Show footer')
-      .setDesc('Toggle the footer and page number at the bottom of each card')
+      .setName('显示页脚')
+      .setDesc('显示每页底部的页脚和页码')
       .addToggle((toggle) => {
         toggle
           .setValue(this.plugin.settings.user.showFooter)
@@ -339,8 +383,8 @@ export class SmartRedSettingTab extends PluginSettingTab {
       });
 
     new Setting(containerEl)
-      .setName('Round avatar')
-      .setDesc('Use a circular avatar crop')
+      .setName('圆形头像')
+      .setDesc('头像使用圆形裁切')
       .addToggle((toggle) => {
         toggle
           .setValue(this.plugin.settings.user.roundAvatar)
@@ -352,8 +396,8 @@ export class SmartRedSettingTab extends PluginSettingTab {
       });
 
     new Setting(containerEl)
-      .setName('Top safe area')
-      .setDesc('Blank reserved at the very top (px) so the Xiaohongshu AI-content banner covers empty space instead of your title')
+      .setName('顶部安全区')
+      .setDesc('在卡片顶部预留的空白（px），避免小红书 AI 内容提示遮住标题')
       .addSlider((slider) =>
         slider
           .setLimits(0, 240, 10)
@@ -366,11 +410,11 @@ export class SmartRedSettingTab extends PluginSettingTab {
           })
       );
 
-    new Setting(containerEl).setName('Cover Page').setHeading();
+    new Setting(containerEl).setName('封面').setHeading();
 
     new Setting(containerEl)
-      .setName('Enable cover')
-      .setDesc('Prepend a big-type title card (exported as <title>-00.png). The title also stays on the first content page.')
+      .setName('启用封面')
+      .setDesc('在正文前添加一页大字标题封面（导出为 <标题>-00.png）。正文第一页仍保留标题。')
       .addToggle((toggle) => {
         toggle
           .setValue(this.plugin.settings.cover.enabled)
@@ -382,8 +426,8 @@ export class SmartRedSettingTab extends PluginSettingTab {
       });
 
     new Setting(containerEl)
-      .setName('Author card on cover')
-      .setDesc('Show avatar, nickname and handle at the bottom of the cover')
+      .setName('封面显示作者')
+      .setDesc('在封面底部显示头像、昵称和账号')
       .addToggle((toggle) => {
         toggle
           .setValue(this.plugin.settings.cover.showAuthor)
@@ -395,8 +439,8 @@ export class SmartRedSettingTab extends PluginSettingTab {
       });
 
     new Setting(containerEl)
-      .setName('Drop the title heading')
-      .setDesc('With a cover, the first H1 would repeat the title on the first content card')
+      .setName('封面下不重复标题')
+      .setDesc('启用封面后，正文第一页的第一个一级标题会与封面重复')
       .addToggle((toggle) => {
         toggle
           .setValue(this.plugin.settings.cover.hideFirstHeading !== false)
@@ -407,32 +451,43 @@ export class SmartRedSettingTab extends PluginSettingTab {
           });
       });
 
-    new Setting(containerEl).setName('Custom Theme').setHeading();
+    new Setting(containerEl).setName('配色方案').setHeading();
+    if (ownPalette) {
+      containerEl.createEl('p', {
+        text: fresh
+          ? '默认保留清爽编辑版自己的冷浅灰与深青。也可以在上方选择其他配色；深色模板建议搭配深色方案。'
+          : '默认保留该模板自带的配色与字体搭配。也可以在上方选择其他配色；深色模板建议搭配深色方案。',
+      });
+    }
 
     new Setting(containerEl)
-      .setName('Theme preset')
-      .setDesc('One-click palettes ported from note-to-red. Fills the color fields below; light palettes pair best with light templates.')
+      .setName('配色预设')
+      .setDesc('“默认配色”保留模板原色；深色模板建议选深色方案，浅色模板建议选浅色方案。')
       .addDropdown((dropdown) => {
-        dropdown.addOption('', 'Custom');
+        dropdown.addOption(DEFAULT_PALETTE_ID, '默认配色');
         for (const preset of THEME_PRESETS) {
-          dropdown.addOption(preset.id, preset.label);
+          if (preset.id !== DEFAULT_PALETTE_ID) dropdown.addOption(preset.id, preset.label);
         }
-        dropdown.setValue('').onChange(async (value) => {
-          const preset = THEME_PRESETS.find((p) => p.id === value);
+        dropdown.addOption('custom', '自定义');
+        dropdown.selectEl.options[dropdown.selectEl.options.length - 1].disabled = true;
+        const current = getPalette(this.plugin.settings.paletteId)?.id ?? 'custom';
+        dropdown.setValue(current).onChange(async (value) => {
+          const preset = getPalette(value);
           if (!preset) return;
-          this.plugin.settings.theme = {
-            ...this.plugin.settings.theme,
-            ...preset.theme,
-          };
+          applyThemePreset(this.plugin.settings, preset);
           await this.plugin.saveSettings();
           this.plugin.refreshView();
           this.display();
         });
       });
 
-    new Setting(containerEl)
-      .setName('Font family')
-      .setDesc('Optional CSS font stack override')
+    const themeContainer = containerEl.createDiv();
+    themeContainer.hidden = ownPalette;
+    new Setting(themeContainer).setName('手动配色').setHeading();
+
+    new Setting(themeContainer)
+      .setName('字体')
+      .setDesc('可选：覆盖 CSS 字体栈')
       .addText((text) => {
         text
           .setValue(this.plugin.settings.theme.fontFamily)
@@ -443,105 +498,152 @@ export class SmartRedSettingTab extends PluginSettingTab {
           });
       });
 
-    new Setting(containerEl)
-      .setName('Text color')
-      .setDesc('Optional CSS color for text and headings')
+    new Setting(themeContainer)
+      .setName('文字颜色')
+      .setDesc('可选：正文和标题的文字颜色')
       .addText((text) => {
         text
           .setValue(this.plugin.settings.theme.textColor)
           .onChange(async (value) => {
             this.plugin.settings.theme.textColor = value.trim();
+            this.plugin.settings.paletteId = 'custom';
             await this.plugin.saveSettings();
             this.plugin.refreshView();
           });
       });
 
-    new Setting(containerEl)
-      .setName('Background color')
-      .setDesc('Optional CSS color for card background')
+    new Setting(themeContainer)
+      .setName('背景颜色')
+      .setDesc('可选：卡片背景颜色')
       .addText((text) => {
         text
           .setValue(this.plugin.settings.theme.backgroundColor)
           .onChange(async (value) => {
             this.plugin.settings.theme.backgroundColor = value.trim();
+            this.plugin.settings.paletteId = 'custom';
             await this.plugin.saveSettings();
             this.plugin.refreshView();
           });
       });
 
-    new Setting(containerEl)
-      .setName('Accent color')
-      .setDesc('Optional CSS color for links, rules, and emphasis')
+    new Setting(themeContainer)
+      .setName('强调色')
+      .setDesc('可选：链接、分隔线和强调元素的颜色')
       .addText((text) => {
         text
           .setValue(this.plugin.settings.theme.accentColor)
           .onChange(async (value) => {
             this.plugin.settings.theme.accentColor = value.trim();
+            this.plugin.settings.paletteId = 'custom';
             await this.plugin.saveSettings();
             this.plugin.refreshView();
           });
       });
 
     this.colorSetting(
-      containerEl,
-      'Bold color',
-      'Pick a color for **bold** text; reset to the template default',
+      themeContainer,
+      '加粗颜色',
+      '**加粗**文字的颜色；可恢复模板默认',
       () => this.plugin.settings.theme.boldColor ?? '',
       (value) => { this.plugin.settings.theme.boldColor = value; }
     );
 
     this.colorSetting(
-      containerEl,
-      'Highlight color',
-      'Background color for ==highlighted== text; reset to the template default',
+      themeContainer,
+      '高亮颜色',
+      '==高亮==文字的背景色；可恢复模板默认',
       () => this.plugin.settings.theme.highlightColor ?? '',
       (value) => { this.plugin.settings.theme.highlightColor = value; }
     );
 
     this.colorSetting(
-      containerEl,
-      'Heading 1 color',
-      '# H1 color; reset to the template default',
+      themeContainer,
+      '一级标题颜色',
+      '# 一级标题的颜色；可恢复模板默认',
       () => this.plugin.settings.theme.h1Color ?? '',
       (value) => { this.plugin.settings.theme.h1Color = value; }
     );
 
     this.colorSetting(
-      containerEl,
-      'Heading 2 color',
-      '## H2 color; reset to the template default',
+      themeContainer,
+      '二级标题颜色',
+      '## 二级标题的颜色；可恢复模板默认',
       () => this.plugin.settings.theme.h2Color ?? '',
       (value) => { this.plugin.settings.theme.h2Color = value; }
     );
 
     this.colorSetting(
-      containerEl,
-      'Heading 3 color',
-      '### H3 color; reset to the template default',
+      themeContainer,
+      '三级标题颜色',
+      '### 三级标题的颜色；可恢复模板默认',
       () => this.plugin.settings.theme.h3Color ?? '',
       (value) => { this.plugin.settings.theme.h3Color = value; }
     );
 
     new Setting(containerEl)
-      .setName('Paragraph spacing')
-      .setDesc('Paragraph gap in px')
+      .setName('段落间距')
+      .setDesc('段落之间的间距（px）')
       .addSlider((slider) => {
         slider
           .setLimits(12, 40, 1)
-          .setValue(this.plugin.settings.theme.spacing)
+          .setValue(fresh ? reading.spacing : this.plugin.settings.theme.spacing)
           .setDynamicTooltip()
           .onChange(async (value) => {
-            this.plugin.settings.theme.spacing = value;
+            if (fresh) {
+              this.plugin.settings.freshReading.spacing = value;
+              readingDropdown?.setValue(readingPresetId(this.plugin.settings.freshReading));
+            } else this.plugin.settings.theme.spacing = value;
             await this.plugin.saveSettings();
             this.plugin.refreshView();
           });
       });
 
-    new Setting(containerEl).setName('Export').setHeading();
+    const templateSide = getTemplate(this.plugin.settings.template).cardPadding;
+    const effectiveSide = this.plugin.settings.sidePadding || templateSide;
+    new Setting(containerEl)
+      .setName('左右边距')
+      .setDesc('卡片左右留白（px）；点击右侧按钮恢复模板默认。')
+      .addSlider((slider) => {
+        slider
+          .setLimits(40, 140, 2)
+          .setValue(Math.min(140, Math.max(40, effectiveSide)))
+          .setDynamicTooltip()
+          .onChange(async (value) => {
+            this.plugin.settings.sidePadding = value;
+            await this.plugin.saveSettings();
+            this.plugin.refreshView();
+          });
+      })
+      .addExtraButton((button) =>
+        button
+          .setIcon('rotate-ccw')
+          .setTooltip('恢复模板默认边距')
+          .onClick(async () => {
+            this.plugin.settings.sidePadding = 0;
+            await this.plugin.saveSettings();
+            this.plugin.refreshView();
+            this.display();
+          })
+      );
 
     new Setting(containerEl)
-      .setName('Export scale')
-      .setDesc('PNG pixel ratio. 2 exports 2160 x 2880 images.')
+      .setName('避免孤行')
+      .setDesc('段落跨页时，避免把最后一行单独留在下一张卡片；开启后页面底部可能多留一点空白。')
+      .addToggle((toggle) => {
+        toggle
+          .setValue(this.plugin.settings.avoidWidows !== false)
+          .onChange(async (value) => {
+            this.plugin.settings.avoidWidows = value;
+            await this.plugin.saveSettings();
+            this.plugin.refreshView();
+          });
+      });
+
+    new Setting(containerEl).setName('导出').setHeading();
+
+    new Setting(containerEl)
+      .setName('导出倍率')
+      .setDesc('PNG 像素倍率；2 倍导出 2160 × 2880 图片。')
       .addDropdown((dropdown) => {
         dropdown
           .addOption('1', '1x')
